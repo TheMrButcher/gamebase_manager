@@ -2,4 +2,11 @@
     <qresource prefix="/common">
         <file>VERSION.txt</file>
     </qresource>
+    <qresource prefix="/">
+        <file>images/icons/Folder.png</file>
+        <file>images/icons/Error.png</file>
+        <file>images/icons/Help.png</file>
+        <file>images/icons/Ok.png</file>
+        <file>images/icons/Web.png</file>
+    </qresource>
 </RCC>

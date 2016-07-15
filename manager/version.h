@@ -8,7 +8,7 @@ class Version
 public:
     QString toString() const;
 
-    static Version read(QString fileName);
+    bool read(QString fileName);
 
     QStringList version;
 };

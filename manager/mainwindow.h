@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "aboutwindow.h"
+#include "settingsform.h"
 
 namespace Ui {
 class MainWindow;
@@ -22,6 +23,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     AboutWindow* about;
+    SettingsForm* settings;
 };
 
 #endif // MAINWINDOW_H

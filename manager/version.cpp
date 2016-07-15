@@ -7,13 +7,16 @@ QString Version::toString() const
     return version.join('.');
 }
 
-Version Version::read(QString fileName)
+bool Version::read(QString fileName)
 {
     QFile versionFile(fileName);
+    if (!versionFile.exists())
+        return false;
     versionFile.open(QIODevice::ReadOnly);
     QTextStream stream(&versionFile);
     auto versionStr = stream.readAll();
-    return Version{ versionStr.split('.', QString::SkipEmptyParts) };
+    version = versionStr.split('.', QString::SkipEmptyParts);
+    return true;
 }
 
 bool operator==(const Version& v1, const Version& v2)

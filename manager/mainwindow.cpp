@@ -7,6 +7,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     about = new AboutWindow(this);
+
+    settings = new SettingsForm();
+    ui->settingsLayout->addWidget(settings);
 }
 
 MainWindow::~MainWindow()

@@ -8,8 +8,9 @@ AboutWindow::AboutWindow(QWidget *parent) :
     ui(new Ui::AboutWindow)
 {
     ui->setupUi(this);
-    ui->gamebaseLabel->setText(
-                ui->gamebaseLabel->text() + Version::read(":/common/VERSION.txt").toString());
+    Version managerVersion;
+    managerVersion.read(":/common/VERSION.txt");
+    ui->gamebaseLabel->setText(ui->gamebaseLabel->text() + managerVersion.toString());
     setFixedSize(sizeHint());
 }
 
