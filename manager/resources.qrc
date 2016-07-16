@@ -8,5 +8,8 @@
         <file>images/icons/Help.png</file>
         <file>images/icons/Ok.png</file>
         <file>images/icons/Web.png</file>
+        <file>images/icons/Archive.png</file>
+        <file>images/icons/Code.png</file>
+        <file>images/icons/Home.png</file>
     </qresource>
 </RCC>

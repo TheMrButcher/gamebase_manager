@@ -1,0 +1,17 @@
+Qt Library
+License: LGPLv.3, http://doc.qt.io/qt-5/lgpl.html
+Source: https://www.qt.io/download-open-source/
+
+32x32 Free Design Icons
+License: http://creativecommons.org/licenses/by/3.0/us/
+Source: http://www.small-icons.com/packs/32x32-free-design-icons.htm
+
+Archive.png
+Author: Oxygen Team
+License: Creative Commons (Attribution-NonCommercial-NoDerivs 2.5 Generic) https://creativecommons.org/licenses/by-nc-nd/2.5/legalcode
+Source: https://www.iconfinder.com/icons/8818/archive_rar_zip_icon
+
+Code.png
+Author: IcoCentre
+License: Free for commercial use
+Source: https://www.iconfinder.com/icons/308015/code_cpp_icon

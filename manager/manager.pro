@@ -19,7 +19,10 @@ SOURCES += main.cpp\
     settings.cpp \
     settingsform.cpp \
     librarysourcestablemodel.cpp \
-    appsourcestablemodel.cpp
+    appsourcestablemodel.cpp \
+    librariesform.cpp \
+    librariestablemodel.cpp \
+    library.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -30,11 +33,15 @@ HEADERS  += mainwindow.h \
     librarysourcestablemodel.h \
     sourcestatus.h \
     appsourcestablemodel.h \
-    appsource.h
+    appsource.h \
+    librariesform.h \
+    library.h \
+    librariestablemodel.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
-    settingsform.ui
+    settingsform.ui \
+    librariesform.ui
 
 RESOURCES += \
     resources.qrc

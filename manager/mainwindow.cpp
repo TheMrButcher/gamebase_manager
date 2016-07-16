@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new SettingsForm();
     ui->settingsLayout->addWidget(settings);
+
+    libraries = new LibrariesForm();
+    ui->librariesLayout->addWidget(libraries);
 }
 
 MainWindow::~MainWindow()

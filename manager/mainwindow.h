@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "aboutwindow.h"
 #include "settingsform.h"
+#include "librariesform.h"
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +25,7 @@ private:
     Ui::MainWindow *ui;
     AboutWindow* about;
     SettingsForm* settings;
+    LibrariesForm* libraries;
 };
 
 #endif // MAINWINDOW_H
