@@ -18,8 +18,15 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void updateLibrarySources(const QList<LibrarySource>& sources);
+
+public slots:
+    void updateLibrarySources();
+
 private slots:
     void on_aboutAction_triggered();
+
+    void onUpdateFinished(LibrarySource source, const QList<Library>& libraries);
 
 private:
     Ui::MainWindow *ui;

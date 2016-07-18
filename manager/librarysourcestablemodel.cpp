@@ -28,6 +28,19 @@ void LibrarySourcesTableModel::append(const LibrarySource& source)
     endInsertRows();
 }
 
+void LibrarySourcesTableModel::update(const LibrarySource& source)
+{
+    for (int i = 0; i != sources.size(); ++i) {
+        auto& dstSource = sources[i];
+        if (dstSource.path == source.path) {
+            dstSource.type = source.type;
+            dstSource.status = source.status;
+            emit dataChanged(index(i, 0), index(i, 2));
+            return;
+        }
+    }
+}
+
 int LibrarySourcesTableModel::rowCount(const QModelIndex&) const
 {
     return sources.size();
@@ -52,6 +65,7 @@ QVariant LibrarySourcesTableModel::data(const QModelIndex& index, int role) cons
             switch (sources[index.row()].type) {
             case LibrarySource::Server: return QIcon(":/images/icons/Web.png");
             case LibrarySource::Directory: return QIcon(":/images/icons/Folder.png");
+            case LibrarySource::DownloadsDirectory: return QIcon(":/images/icons/Download.png");
             default: return QVariant();
             }
         } else if (index.column() == 2){

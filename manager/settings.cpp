@@ -7,10 +7,12 @@
 
 namespace {
 const QString DEFAULT_WORKING_DIR = "programs";
+const QString DEFAULT_DOWNLOADS_DIR = "downloads";
 const LibrarySource DEFAULT_LIBRARY_SOURCE{
     LibrarySource::Server,
     "https://github.com/TheMrButcher/gamebase",
     SourceStatus::Unknown };
+const QString DEFAULT_TEMP_DIR = "temp";
 }
 
 bool Settings::read(QString fname)
@@ -26,17 +28,24 @@ bool Settings::read(QString fname)
         return false;
 
     auto rootObj = json.object();
-    workingDir = rootObj["workingDir"].toString(workingDir);
+    auto workingDir = rootObj["workingDir"].toString(this->workingDir().path);
+    auto downloadsDir = rootObj["downloadsDir"].toString(this->downloadsDir().path);
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
+    librarySources.append(LibrarySource{
+        LibrarySource::WorkingDirectory, workingDir, SourceStatus::Unknown });
+    librarySources.append(LibrarySource{
+        LibrarySource::DownloadsDirectory, downloadsDir, SourceStatus::Unknown });
     foreach (auto sourceValue, librarySourcesArray) {
         auto sourceObj = sourceValue.toObject();
         auto path = sourceObj["path"].toString();
         if (path.isEmpty())
             continue;
-        auto type = sourceObj["type"].toString("directory") == "directory"
-                ? LibrarySource::Directory : LibrarySource::Server;
+        LibrarySource::Type type = LibrarySource::Directory;
+        auto typeStr = sourceObj["type"].toString("directory");
+        if (typeStr == "server")
+            type = LibrarySource::Server;
         librarySources.append(LibrarySource{ type, path, SourceStatus::Unknown });
     }
 
@@ -60,14 +69,18 @@ void Settings::write(QString fname)
         return;
 
     QJsonObject rootObj;
-    rootObj["workingDir"] = workingDir;
+    rootObj["workingDir"] = workingDir().path;
+    rootObj["downloadsDir"] = downloadsDir().path;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
         QJsonObject sourceObj;
         sourceObj["path"] = source.path;
-        sourceObj["type"] = source.type == LibrarySource::Directory
-                ? "directory" : "server";
+        switch (source.type) {
+        case LibrarySource::Server: sourceObj["type"] = "server"; break;
+        case LibrarySource::Directory: sourceObj["type"] = "directory"; break;
+        default: continue;
+        }
         librarySourcesArray.append(sourceObj);
     }
     rootObj["librarySources"] = librarySourcesArray;
@@ -84,11 +97,36 @@ void Settings::write(QString fname)
     settingsFile.write(json.toJson());
 }
 
+LibrarySource Settings::workingDir() const
+{
+    foreach (const auto& source, librarySources)
+        if (source.type == LibrarySource::WorkingDirectory)
+            return source;
+    return LibrarySource{ LibrarySource::None, "", SourceStatus::Broken };
+}
+
+LibrarySource Settings::downloadsDir() const
+{
+    foreach (const auto& source, librarySources)
+        if (source.type == LibrarySource::DownloadsDirectory)
+            return source;
+    return LibrarySource{ LibrarySource::None, "", SourceStatus::Broken };
+}
+
 Settings Settings::defaultValue()
 {
     QList<LibrarySource> librarySources;
     librarySources.append(DEFAULT_LIBRARY_SOURCE);
-    return Settings{ QDir().absoluteFilePath(DEFAULT_WORKING_DIR), librarySources };
+
+    QString workingPath = QDir().absoluteFilePath(DEFAULT_WORKING_DIR);
+    librarySources.append(LibrarySource{
+            LibrarySource::WorkingDirectory, workingPath, SourceStatus::Unknown });
+
+    QString downloadsPath = QDir().absoluteFilePath(DEFAULT_DOWNLOADS_DIR);
+    librarySources.append(LibrarySource{
+            LibrarySource::DownloadsDirectory, downloadsPath, SourceStatus::Unknown });
+
+    return Settings{ librarySources, QList<AppSource>() };
 }
 
 Settings& Settings::instance()
@@ -96,5 +134,3 @@ Settings& Settings::instance()
     static Settings settings;
     return settings;
 }
-
-

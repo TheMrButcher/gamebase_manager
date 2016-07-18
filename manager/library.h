@@ -8,7 +8,6 @@ class Library
 {
 public:
     LibrarySource source;
-    bool isCurrent;
 
     enum State {
         Absent,
@@ -20,7 +19,8 @@ public:
     Version version;
     QString archiveName;
 
-    static Library fromDirectory(QString path);
+    static Library fromFileSystem(const LibrarySource& source, QString name = "");
+    static Library makeAbsent(const LibrarySource& source);
 };
 
 #endif // LIBRARY_H

@@ -1,6 +1,7 @@
 #include "settingsform.h"
 #include "ui_settingsform.h"
 #include "settings.h"
+#include "mainwindow.h"
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -9,11 +10,13 @@ namespace {
 const QString SETTINGS_FILE_NAME = "settings.json";
 }
 
-SettingsForm::SettingsForm(QWidget *parent) :
+SettingsForm::SettingsForm(MainWindow* parent) :
     QWidget(parent),
     ui(new Ui::SettingsForm)
 {
     ui->setupUi(this);
+
+    mainWindow = parent;
 
     librarySourcesModel = new LibrarySourcesTableModel(this);
     ui->gamebaseSources->setModel(librarySourcesModel);
@@ -48,18 +51,42 @@ SettingsForm::~SettingsForm()
 
 void SettingsForm::set(const Settings& settings)
 {
-    ui->workingDir->setText(settings.workingDir);
-    librarySourcesModel->set(settings.librarySources);
+    QList<LibrarySource> librarySources;
+    librarySources.reserve(settings.librarySources.size());
+    foreach (const auto& source, settings.librarySources) {
+        switch (source.type) {
+        case LibrarySource::WorkingDirectory: ui->workingDir->setText(source.path); break;
+        case LibrarySource::DownloadsDirectory: ui->downloadsDir->setText(source.path); break;
+        default: librarySources.append(source);
+        }
+    }
+    librarySourcesModel->set(librarySources);
     appSourcesModel->set(settings.appSources);
 }
 
 Settings SettingsForm::get() const
 {
     Settings result;
-    result.workingDir = ui->workingDir->text();
     result.librarySources = librarySourcesModel->get();
+    result.librarySources.append(LibrarySource{
+        LibrarySource::WorkingDirectory, ui->workingDir->text(), SourceStatus::Unknown });
+    result.librarySources.append(LibrarySource{
+        LibrarySource::DownloadsDirectory, ui->downloadsDir->text(), SourceStatus::Unknown });
     result.appSources = appSourcesModel->get();
     return result;
+}
+
+void SettingsForm::setAllUnknown()
+{
+    foreach (auto source, librarySourcesModel->get()) {
+        source.status = SourceStatus::Unknown;
+        updateLibrarySource(source);
+    }
+}
+
+void SettingsForm::updateLibrarySource(const LibrarySource& source)
+{
+    librarySourcesModel->update(source);
 }
 
 void SettingsForm::on_acceptButton_clicked()
@@ -110,7 +137,7 @@ void SettingsForm::on_addGamebaseDirectoryButton_clicked()
     }
 }
 
-void SettingsForm::onAppSourcesSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+void SettingsForm::onAppSourcesSelectionChanged(const QItemSelection& selected, const QItemSelection&)
 {
     ui->removeAppPathButton->setEnabled(!selected.empty());
 }
@@ -139,5 +166,18 @@ void SettingsForm::on_chooseWorkingDir_clicked()
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к рабочей папке");
     if (!path.isEmpty()) {
         ui->workingDir->setText(path);
+    }
+}
+
+void SettingsForm::on_updateGamebaseSourcesButton_clicked()
+{
+    mainWindow->updateLibrarySources(get().librarySources);
+}
+
+void SettingsForm::on_chooseDownloadsDir_clicked()
+{
+    QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке для загрузок");
+    if (!path.isEmpty()) {
+        ui->downloadsDir->setText(path);
     }
 }

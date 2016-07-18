@@ -54,16 +54,14 @@ QVariant LibrariesTableModel::data(const QModelIndex& index, int role) const
         if (index.column() == 0){
             switch (library.source.type) {
             case LibrarySource::Server: return QIcon(":/images/icons/Web.png");
-            case LibrarySource::Directory:
-                if (library.isCurrent)
-                    return QIcon(":/images/icons/Home.png");
-                else
-                    return QIcon(":/images/icons/Folder.png");
+            case LibrarySource::Directory: return QIcon(":/images/icons/Folder.png");
+            case LibrarySource::WorkingDirectory: return QIcon(":/images/icons/Home.png");
+            case LibrarySource::DownloadsDirectory: return QIcon(":/images/icons/Download.png");
             default: return QVariant();
             }
         } else if (index.column() == 4) {
             switch (library.state) {
-            case Library::Absent: return QIcon(":/images/icons/Error.png");
+            case Library::Absent: return QIcon(":/images/icons/Empty.png");
             case Library::SourceCode: return QIcon(":/images/icons/Code.png");
             case Library::BinaryArchive: return QIcon(":/images/icons/Archive.png");
             case Library::Deployed: return QIcon(":/images/icons/Ok.png");

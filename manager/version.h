@@ -8,7 +8,9 @@ class Version
 public:
     QString toString() const;
 
+    void set(QString versionStr);
     bool read(QString fileName);
+    bool empty() const { return version.empty(); }
 
     QStringList version;
 };

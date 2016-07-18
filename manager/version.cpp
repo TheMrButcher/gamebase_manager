@@ -7,6 +7,11 @@ QString Version::toString() const
     return version.join('.');
 }
 
+void Version::set(QString versionStr)
+{
+    version = versionStr.split('.', QString::SkipEmptyParts);
+}
+
 bool Version::read(QString fileName)
 {
     QFile versionFile(fileName);
@@ -15,7 +20,7 @@ bool Version::read(QString fileName)
     versionFile.open(QIODevice::ReadOnly);
     QTextStream stream(&versionFile);
     auto versionStr = stream.readAll();
-    version = versionStr.split('.', QString::SkipEmptyParts);
+    set(versionStr);
     return true;
 }
 

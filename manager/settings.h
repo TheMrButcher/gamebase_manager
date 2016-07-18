@@ -12,10 +12,12 @@ public:
     bool read(QString fname);
     void write(QString fname);
 
+    LibrarySource workingDir() const;
+    LibrarySource downloadsDir() const;
+
     static Settings defaultValue();
     static Settings& instance();
 
-    QString workingDir;
     QList<LibrarySource> librarySources;
     QList<AppSource> appSources;
 };

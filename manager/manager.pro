@@ -4,13 +4,18 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = manager
 TEMPLATE = app
 
+INCLUDEPATH += ../zlib
+LIBS += -L../zlib -lz
+
+INCLUDEPATH += ../quazip/quazip
+LIBS += -L../quazip/quazip/release -lquazip
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -22,7 +27,14 @@ SOURCES += main.cpp\
     appsourcestablemodel.cpp \
     librariesform.cpp \
     librariestablemodel.cpp \
-    library.cpp
+    library.cpp \
+    githublibrarydownloader.cpp \
+    librarysourcemanager.cpp \
+    directorysourcemanager.cpp \
+    librarysourcemanagerlist.cpp \
+    workingdirmanager.cpp \
+    librarysource.cpp \
+    files.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -36,7 +48,13 @@ HEADERS  += mainwindow.h \
     appsource.h \
     librariesform.h \
     library.h \
-    librariestablemodel.h
+    librariestablemodel.h \
+    githublibrarydownloader.h \
+    librarysourcemanager.h \
+    directorysourcemanager.h \
+    librarysourcemanagerlist.h \
+    workingdirmanager.h \
+    files.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

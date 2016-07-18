@@ -10,6 +10,7 @@ namespace Ui {
 class SettingsForm;
 }
 
+class MainWindow;
 class Settings;
 
 class SettingsForm : public QWidget
@@ -17,11 +18,14 @@ class SettingsForm : public QWidget
     Q_OBJECT
 
 public:
-    explicit SettingsForm(QWidget *parent = 0);
+    explicit SettingsForm(MainWindow *parent = 0);
     ~SettingsForm();
 
     void set(const Settings& settings);
     Settings get() const;
+
+    void setAllUnknown();
+    void updateLibrarySource(const LibrarySource& source);
 
 private slots:
     void on_acceptButton_clicked();
@@ -36,7 +40,7 @@ private slots:
 
     void on_addGamebaseDirectoryButton_clicked();
 
-    void onAppSourcesSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+    void onAppSourcesSelectionChanged(const QItemSelection &selected, const QItemSelection &);
 
     void on_addAppDirectoryButton_clicked();
 
@@ -44,8 +48,13 @@ private slots:
 
     void on_chooseWorkingDir_clicked();
 
+    void on_updateGamebaseSourcesButton_clicked();
+
+    void on_chooseDownloadsDir_clicked();
+
 private:
     Ui::SettingsForm *ui;
+    MainWindow* mainWindow;
     LibrarySourcesTableModel* librarySourcesModel;
     AppSourcesTableModel* appSourcesModel;
 };

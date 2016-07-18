@@ -11,5 +11,7 @@
         <file>images/icons/Archive.png</file>
         <file>images/icons/Code.png</file>
         <file>images/icons/Home.png</file>
+        <file>images/icons/Download.png</file>
+        <file>images/icons/Empty.png</file>
     </qresource>
 </RCC>

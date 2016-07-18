@@ -2,6 +2,16 @@ Qt Library
 License: LGPLv.3, http://doc.qt.io/qt-5/lgpl.html
 Source: https://www.qt.io/download-open-source/
 
+QuaZIP
+License: LGPLv.2
+Author: Sergey A. Tachenov
+Source: http://quazip.sourceforge.net/index.html
+
+zlib
+Licens: zlib license
+Author: Gilles Vollant
+Source: http://www.zlib.net/
+
 32x32 Free Design Icons
 License: http://creativecommons.org/licenses/by/3.0/us/
 Source: http://www.small-icons.com/packs/32x32-free-design-icons.htm
