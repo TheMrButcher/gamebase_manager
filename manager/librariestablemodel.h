@@ -3,6 +3,7 @@
 
 #include "library.h"
 #include <QAbstractTableModel>
+#include <QSet>
 
 class LibrariesTableModel : public QAbstractTableModel
 {
@@ -26,6 +27,7 @@ public:
 
 private:
     QList<Library> libraries;
+    QSet<Library> librariesSet;
 };
 
 #endif // LIBRARIESTABLEMODEL_H

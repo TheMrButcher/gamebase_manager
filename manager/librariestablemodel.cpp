@@ -14,15 +14,31 @@ void LibrariesTableModel::set(const QList<Library>& libraries)
 {
     if (!this->libraries.empty())
         removeRows(0, this->libraries.size(), QModelIndex());
+    librariesSet.clear();
     if (libraries.empty())
         return;
-    beginInsertRows(QModelIndex(), 0, libraries.size() - 1);
-    this->libraries = libraries;
+    QList<Library> uniqueLibraries;
+    uniqueLibraries.reserve(libraries.size());
+    foreach (const auto& library, libraries) {
+        if (librariesSet.contains(library))
+            continue;
+        librariesSet.insert(library);
+        if (library.source.type == LibrarySource::WorkingDirectory)
+            uniqueLibraries.prepend(library);
+        else
+            uniqueLibraries.append(library);
+    }
+
+    beginInsertRows(QModelIndex(), 0, uniqueLibraries.size() - 1);
+    this->libraries = uniqueLibraries;
     endInsertRows();
 }
 
 void LibrariesTableModel::append(const Library& library)
 {
+    if (librariesSet.contains(library))
+        return;
+    librariesSet.insert(library);
     beginInsertRows(QModelIndex(), libraries.size(), libraries.size());
     libraries.append(library);
     endInsertRows();
@@ -92,8 +108,10 @@ QVariant LibrariesTableModel::headerData(int section, Qt::Orientation orientatio
 bool LibrariesTableModel::removeRows(int row, int count, const QModelIndex&)
 {
     beginRemoveRows(QModelIndex(), row, row + count - 1);
-    for (int i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i) {
+        librariesSet.remove(libraries[row]);
         libraries.removeAt(row);
+    }
     endRemoveRows();
     return true;
 }

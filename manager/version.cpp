@@ -26,8 +26,7 @@ bool Version::read(QString fileName)
 
 bool operator==(const Version& v1, const Version& v2)
 {
-    return v1.version.size() == v2.version.size()
-            && std::equal(v1.version.begin(), v1.version.end(), v2.version.begin());
+    return v1.version == v2.version;
 }
 
 bool operator<(const Version& v1, const Version& v2)

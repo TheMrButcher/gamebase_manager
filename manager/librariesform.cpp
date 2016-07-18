@@ -16,8 +16,8 @@ LibrariesForm::LibrariesForm(MainWindow *parent) :
     librariesModel = new LibrariesTableModel(this);
     ui->librariesTable->setModel(librariesModel);
     ui->librariesTable->setColumnWidth(0, 60);
-    ui->librariesTable->setColumnWidth(1, 200);
-    ui->librariesTable->setColumnWidth(2, 100);
+    ui->librariesTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    ui->librariesTable->setColumnWidth(2, 150);
     ui->librariesTable->setColumnWidth(3, 50);
     ui->librariesTable->setColumnWidth(4, 50);
 
@@ -62,8 +62,9 @@ void LibrariesForm::onLibrariesSelectionChanged(const QItemSelection& selected, 
         ui->downloadButton->setEnabled(false);
     } else {
         int row = selected[0].bottom();
-        auto state = librariesModel->get()[row].state;
-        ui->downloadButton->setEnabled(state != Library::Absent);
+        const auto& library = librariesModel->get()[row];
+        ui->downloadButton->setEnabled(library.checkAbility(Library::Download));
+        ui->removeButton->setEnabled(library.checkAbility(Library::Remove));
     }
 }
 
@@ -86,4 +87,15 @@ void LibrariesForm::on_downloadButton_clicked()
             return;
     }
     LibrarySourceManagerList::instance()->download(library);
+}
+
+void LibrariesForm::on_removeButton_clicked()
+{
+    auto rows = ui->librariesTable->selectionModel()->selectedRows();
+    if (rows.empty())
+        return;
+    int row = rows[0].row();
+    auto library = librariesModel->get()[row];
+    librariesModel->removeRow(row);
+    library.remove();
 }

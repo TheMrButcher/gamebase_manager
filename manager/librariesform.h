@@ -29,6 +29,8 @@ private slots:
 
     void on_downloadButton_clicked();
 
+    void on_removeButton_clicked();
+
 private:
     Ui::LibrariesForm *ui;
     LibrariesTableModel* librariesModel;
