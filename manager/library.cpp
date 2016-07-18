@@ -1,6 +1,7 @@
 #include "library.h"
 #include "settings.h"
 #include "files.h"
+#include "archive.h"
 #include <JlCompress.h>
 #include <quazip.h>
 #include <quazipdir.h>
@@ -9,33 +10,34 @@
 #include <QTemporaryFile>
 #include <QHash>
 
+#include <QDebug>
+
 namespace {
+const QString BINARY_RESULT_DIR_PREFIX = "Gamebase_Binary_";
+const QString SOURCES_RESULT_DIR_PREFIX = "Gamebase_Sources_";
+
 Library checkDeployed(const LibrarySource& source, QDir dir)
 {
     Version version;
     if (!version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME)))
         return Library::makeAbsent(source);
 
-    if (!Files::existsDir(dir, "src") || !Files::existsDir(dir, "resources"))
+    if (!Files::existsDir(dir, "src") || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME))
         return Library::makeAbsent(source);
 
     dir.cdUp();
     if (!Files::exists(dir, Files::EDITOR_LINK_NAME))
         return Library::makeAbsent(source);
+
     return Library{ source, Library::Deployed, version, QString() };
 }
 
 QString findVersionFile(QString archiveName)
 {
-    QuaZip archive(archiveName);
-    if (!archive.open(QuaZip::mdUnzip))
+    Archive archive(archiveName);
+    if (!archive.open())
         return QString();
-    QuaZipDir dir(&archive);
-    auto entries = dir.entryInfoList(QDir::Dirs);
-    if (entries.size() != 1)
-        return QString();
-    if (!dir.cd(entries.first().name))
-        return QString();
+    auto dir = archive.root();
     if (dir.exists(Files::VERSION_FILE_NAME))
         return dir.filePath(Files::VERSION_FILE_NAME);
     return QString();
@@ -73,6 +75,15 @@ Library checkArchives(const LibrarySource& source, QDir dir)
 }
 }
 
+bool Library::validate()
+{
+    if (source.type == LibrarySource::Server)
+        return false;
+    Library expected = *this;
+    *this = fromFileSystem(source, archiveName);
+    return state != Absent && expected == *this;
+}
+
 bool Library::checkAbility(Library::Ability ability) const
 {
     switch (ability)
@@ -81,7 +92,47 @@ bool Library::checkAbility(Library::Ability ability) const
                 && state != Absent;
     case Remove: return source.type != LibrarySource::Server
                 && state != Absent;
+    case Deploy: return source.type == LibrarySource::DownloadsDirectory
+                && state == BinaryArchive;
+    case Install: return source.type != LibrarySource::WorkingDirectory
+                && state != Absent;
     default: return false;
+    }
+}
+
+Library Library::afterAction(Library::Ability ability) const
+{
+    if (!checkAbility(ability))
+        return makeAbsent(source);
+    switch (ability)
+    {
+    case Download:
+    {
+        QString prefix;
+        switch (state) {
+        case SourceCode:
+            prefix = SOURCES_RESULT_DIR_PREFIX;
+            break;
+
+        case BinaryArchive:
+        case Deployed:
+            prefix = BINARY_RESULT_DIR_PREFIX;
+            break;
+
+        default:
+            return makeAbsent(source);
+        }
+        State newState = state == Deployed ? BinaryArchive : state;
+        auto suffix = version.toString().replace('.', '_');
+        auto dirName = prefix + suffix;
+        return Library{ Settings::instance().downloadsDir(),
+                    newState, version, dirName };
+    }
+    case Deploy:
+    case Install:
+        return Library{ Settings::instance().workingDir(),
+                    Deployed, version, "" };
+    default: return makeAbsent(source);
     }
 }
 
@@ -102,11 +153,7 @@ void Library::remove()
 
     case Deployed:
     {
-        QDir dir(source.path);
-        dir.remove(Files::EDITOR_LINK_NAME);
-        if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
-            return;
-        dir.removeRecursively();
+        removeDeployedFiles(source.path);
         break;
     }
 
@@ -138,6 +185,21 @@ Library Library::makeAbsent(const LibrarySource& source)
 {
     return Library{
         source, Library::Absent, Version{}, QString() };
+}
+
+Library Library::makeAbsent()
+{
+    return Library::makeAbsent(
+        LibrarySource{ LibrarySource::Directory, "", SourceStatus::Broken });
+}
+
+void Library::removeDeployedFiles(QString path)
+{
+    QDir dir(path);
+    dir.remove(Files::EDITOR_LINK_NAME);
+    if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
+        return;
+    dir.removeRecursively();
 }
 
 uint qHash(const Library& lib, uint seed)

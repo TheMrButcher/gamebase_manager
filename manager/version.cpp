@@ -24,6 +24,13 @@ bool Version::read(QString fileName)
     return true;
 }
 
+Version Version::fromString(QString versionStr)
+{
+    Version version;
+    version.set(versionStr);
+    return version;
+}
+
 bool operator==(const Version& v1, const Version& v2)
 {
     return v1.version == v2.version;

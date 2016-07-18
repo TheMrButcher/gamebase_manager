@@ -12,6 +12,8 @@ public:
     bool read(QString fileName);
     bool empty() const { return version.empty(); }
 
+    static Version fromString(QString versionStr);
+
     QStringList version;
 };
 

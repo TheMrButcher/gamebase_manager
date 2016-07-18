@@ -3,8 +3,10 @@
 #include "settings.h"
 #include "mainwindow.h"
 #include "librarysourcemanagerlist.h"
+#include "librarydeployer.h"
 #include <QDir>
 #include <QMessageBox>
+#include <QThreadPool>
 #include <QDebug>
 
 LibrariesForm::LibrariesForm(MainWindow *parent) :
@@ -20,6 +22,8 @@ LibrariesForm::LibrariesForm(MainWindow *parent) :
     ui->librariesTable->setColumnWidth(2, 150);
     ui->librariesTable->setColumnWidth(3, 50);
     ui->librariesTable->setColumnWidth(4, 50);
+
+    threadPool = new QThreadPool(this);
 
     clearLibrariesTable();
 
@@ -47,12 +51,83 @@ void LibrariesForm::append(const QList<Library>& libraries)
         librariesModel->append(library);
 }
 
-void LibrariesForm::onLibraryDownloaded(const Library& library)
+void LibrariesForm::download(Library library)
 {
-    if (library.state == Library::Absent) {
+    auto downloadsDir = Settings::instance().downloadsDir();
+    if (downloadsDir.check() != SourceStatus::OK) {
+        auto answer = QMessageBox::question(this, "Создание папки для загрузок",
+                                            "Папка для загрузок отсутствует. Создать?");
+        if (answer != QMessageBox::Yes)
+            return;
+        QDir dir;
+        dir.mkpath(downloadsDir.path);
+        if (downloadsDir.check() != SourceStatus::OK)
+            return;
+    }
+    auto resultLibrary = library.afterAction(Library::Download);
+    if (resultLibrary.validate()) {
+        onLibraryDownloaded(resultLibrary);
+        return;
+    }
+    LibrarySourceManagerList::instance()->download(library);
+}
+
+void LibrariesForm::install(Library library)
+{
+    if (!library.checkAbility(Library::Install))
+        return;
+    if (library.checkAbility(Library::Deploy)) {
+        auto resultLibrary = library.afterAction(Library::Deploy);
+        if (resultLibrary.source.check() != SourceStatus::OK) {
+            auto answer = QMessageBox::question(this, "Создание рабочей папки",
+                                                "Рабочая папка отсутствует. Создать?");
+            if (answer != QMessageBox::Yes)
+                return;
+            QDir dir;
+            dir.mkpath(resultLibrary.source.path);
+            if (resultLibrary.source.check() != SourceStatus::OK)
+                return;
+        }
+
+        int row = 0;
+        foreach (const auto& libraryInTable, librariesModel->get()) {
+            if (libraryInTable.source.type == LibrarySource::WorkingDirectory) {
+                librariesModel->removeRow(row);
+                break;
+            }
+            ++row;
+        }
+        auto deployer = new LibraryDeployer(library, this);
+        threadPool->start(deployer);
+        return;
+    }
+    if (library.checkAbility(Library::Download)) {
+        toInstall.insert(library.afterAction(Library::Download));
+        download(library);
+    }
+}
+
+void LibrariesForm::onLibraryDownloaded(Library library)
+{
+    Library realLibrary = library;
+    if (!realLibrary.validate()) {
+        toInstall.remove(library);
         qDebug() << "Failed to download from " << library.source.path;
         return;
     }
+    librariesModel->append(realLibrary);
+    if (toInstall.contains(library)) {
+        toInstall.remove(library);
+        install(realLibrary);
+    }
+}
+
+void LibrariesForm::onLibraryDeployed(QString version)
+{
+    Library library{ Settings::instance().workingDir(),
+                Library::Deployed, Version::fromString(version), "" };
+    if (!library.validate())
+        qDebug() << "Failed to deploy library";
     librariesModel->append(library);
 }
 
@@ -65,37 +140,40 @@ void LibrariesForm::onLibrariesSelectionChanged(const QItemSelection& selected, 
         const auto& library = librariesModel->get()[row];
         ui->downloadButton->setEnabled(library.checkAbility(Library::Download));
         ui->removeButton->setEnabled(library.checkAbility(Library::Remove));
+        ui->installButton->setEnabled(library.checkAbility(Library::Install));
     }
 }
 
 void LibrariesForm::on_downloadButton_clicked()
 {
-    auto rows = ui->librariesTable->selectionModel()->selectedRows();
-    if (rows.empty())
+    int row = selectedRow();
+    if (row == -1)
         return;
-    int row = rows[0].row();
-    auto library = librariesModel->get()[row];
-    auto downloadsDir = Settings::instance().downloadsDir();
-    if (downloadsDir.check() != SourceStatus::OK) {
-        auto answer = QMessageBox::question(this, "Создание папки для загрузок",
-                                            "Папка для загрузок отсутствует. Создать?");
-        if (answer != QMessageBox::Yes)
-            return;
-        QDir dir;
-        dir.mkpath(downloadsDir.path);
-        if (downloadsDir.check() != SourceStatus::OK)
-            return;
-    }
-    LibrarySourceManagerList::instance()->download(library);
+    download(librariesModel->get()[row]);
 }
 
 void LibrariesForm::on_removeButton_clicked()
 {
-    auto rows = ui->librariesTable->selectionModel()->selectedRows();
-    if (rows.empty())
+    int row = selectedRow();
+    if (row == -1)
         return;
-    int row = rows[0].row();
     auto library = librariesModel->get()[row];
     librariesModel->removeRow(row);
     library.remove();
+}
+
+void LibrariesForm::on_installButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    install(librariesModel->get()[row]);
+}
+
+int LibrariesForm::selectedRow() const
+{
+    auto rows = ui->librariesTable->selectionModel()->selectedRows();
+    if (rows.empty())
+        return -1;
+    return rows[0].row();
 }

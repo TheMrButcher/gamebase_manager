@@ -45,7 +45,7 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QPushButton" name="setupButton">
+         <widget class="QPushButton" name="installButton">
           <property name="enabled">
            <bool>false</bool>
           </property>

@@ -39,8 +39,13 @@ void LibrariesTableModel::append(const Library& library)
     if (librariesSet.contains(library))
         return;
     librariesSet.insert(library);
-    beginInsertRows(QModelIndex(), libraries.size(), libraries.size());
-    libraries.append(library);
+    if (library.source.type == LibrarySource::WorkingDirectory) {
+        beginInsertRows(QModelIndex(), 0, 0);
+        libraries.prepend(library);
+    } else {
+        beginInsertRows(QModelIndex(), libraries.size(), libraries.size());
+        libraries.append(library);
+    }
     endInsertRows();
 }
 

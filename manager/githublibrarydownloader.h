@@ -22,10 +22,10 @@ private slots:
     void replyFinished(QNetworkReply* reply);
 
 private:
-    void startDownload(const QJsonObject& releaseObj, const Library& library);
+    void startDownload(const QJsonObject& releaseObj, const Library& library, Library resultLibrary);
     void reportBrokenSource();
     void processReleases(QNetworkReply* reply, const QByteArray& body);
-    void processDownload(QNetworkReply* reply, const QByteArray& body);
+    void processDownload(QNetworkReply* reply, const QByteArray& body, const Library& resultLibrary);
 
     LibrarySource source;
     QNetworkAccessManager* networkManager;

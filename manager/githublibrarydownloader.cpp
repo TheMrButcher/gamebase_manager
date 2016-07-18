@@ -14,7 +14,6 @@ const QString GITHUB_HOST_NAME = "github.com";
 const QString API_PREFIX = "https://api.github.com/repos";
 const QString RELEASES_SUFFIX = "/releases";
 const QString VERSION_KEY = "tag_name";
-const QString BINARY_RESULT_DIR_PREFIX = "Gamebase_Binary_";
 const int MAX_RELEASES_NUM = 3;
 
 QNetworkRequest makeRequest(QUrl url, const char* accept)
@@ -59,8 +58,9 @@ void GithubLibraryDownloader::update()
 
 void GithubLibraryDownloader::download(const Library& library)
 {
+    Library resultLibrary = library.afterAction(Library::Download);
     if (networkManager->networkAccessible() != QNetworkAccessManager::Accessible) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
 
@@ -73,17 +73,20 @@ void GithubLibraryDownloader::download(const Library& library)
         if (!versionStr.isEmpty() && versionStr[0] == 'v')
             versionStr = versionStr.mid(1);
         if (versionStr == versionToDownload) {
-            startDownload(releaseObj, library);
+            startDownload(releaseObj, library, resultLibrary);
             return;
         }
     }
-    emit finishedDownload(Library::makeAbsent(source));
+    emit finishedDownload(resultLibrary);
 }
 
-void GithubLibraryDownloader::startDownload(const QJsonObject& releaseObj, const Library& library)
+void GithubLibraryDownloader::startDownload(
+        const QJsonObject& releaseObj,
+        const Library& library,
+        Library resultLibrary)
 {
     if (releaseObj["zipball_url"].toString().isEmpty()) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
 
@@ -91,35 +94,31 @@ void GithubLibraryDownloader::startDownload(const QJsonObject& releaseObj, const
     auto assets = releaseObj["assets"].toArray();
     if (library.state == Library::BinaryArchive) {
         if (assets.empty()) {
-            emit finishedDownload(Library::makeAbsent(source));
+            emit finishedDownload(resultLibrary);
             return;
         }
         assetObj = assets[0].toObject();
         if (assetObj["name"].toString() != Files::BINARY_ARCHIVE_NAME
             || assetObj["browser_download_url"].toString().isEmpty()) {
-            emit finishedDownload(Library::makeAbsent(source));
+            emit finishedDownload(resultLibrary);
             return;
         }
     }
 
-    auto downloadsDir = Settings::instance().downloadsDir();
-    if (downloadsDir.check() != SourceStatus::OK) {
-        emit finishedDownload(Library::makeAbsent(source));
+    if (resultLibrary.source.check() != SourceStatus::OK) {
+        emit finishedDownload(resultLibrary);
         return;
     }
-    auto versionSuffix = library.version.toString().replace('.', '_');
-    auto dirName = BINARY_RESULT_DIR_PREFIX + versionSuffix;
-    QDir dir(downloadsDir.path);
-    if (dir.cd(dirName)) {
+    QDir dir(resultLibrary.source.path);
+    if (dir.cd(resultLibrary.archiveName)) {
         dir.removeRecursively();
-        dir = QDir(downloadsDir.path);
+        dir = QDir(resultLibrary.source.path);
     }
-    dir.mkdir(dirName);
-    if (!dir.cd(dirName)) {
+    dir.mkdir(resultLibrary.archiveName);
+    if (!dir.cd(resultLibrary.archiveName)) {
         emit finishedDownload(Library::makeAbsent(source));
         return;
     }
-    Library resultLibrary{ downloadsDir, library.state, library.version, dirName };
 
     if (filesToDownload.contains(resultLibrary.archiveName))
         return;
@@ -160,7 +159,7 @@ void GithubLibraryDownloader::replyFinished(QNetworkReply* reply)
     Library resultLibrary;
     if (isDownload) {
         resultLibrary = downloadRequests[key].library;
-        processDownload(reply, body);
+        processDownload(reply, body, resultLibrary);
     } else {
         processReleases(reply, body);
     }
@@ -229,24 +228,25 @@ void GithubLibraryDownloader::processReleases(QNetworkReply* reply, const QByteA
     reportBrokenSource();
 }
 
-void GithubLibraryDownloader::processDownload(QNetworkReply* reply, const QByteArray& body)
+void GithubLibraryDownloader::processDownload(
+        QNetworkReply* reply, const QByteArray& body, const Library& resultLibrary)
 {
     qDebug() << "Downloaded " << body.size() << " bytes";
 
     if (reply->error() != QNetworkReply::NoError) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
 
     auto downloadsDir = Settings::instance().downloadsDir();
     if (downloadsDir.check() != SourceStatus::OK) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
     const auto& desc = downloadRequests[reply->request().url().toString()];
     QFile resultFile(desc.resultFileName);
     if (!resultFile.open(QIODevice::WriteOnly)) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
     resultFile.write(body);
