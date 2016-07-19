@@ -10,7 +10,6 @@ class LibrariesForm;
 
 class MainWindow;
 class QItemSelection;
-class QThreadPool;
 
 class LibrariesForm : public QWidget
 {
@@ -26,7 +25,8 @@ public:
     void install(Library library);
 
 public slots:
-    void onLibraryDeployed(QString version);
+    void onLibraryDeployed(Library library);
+    void onLibraryRemoved(Library library);
 
 private slots:
     void onLibraryDownloaded(Library library);
@@ -44,8 +44,8 @@ private:
 
     Ui::LibrariesForm *ui;
     LibrariesTableModel* librariesModel;
-    QSet<Library> toInstall;
-    QThreadPool* threadPool;
+    Library toInstall;
+    Library::Ability waitedInstallAction;
 };
 
 #endif // LIBRARIESFORM_H

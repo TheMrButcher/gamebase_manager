@@ -15,6 +15,7 @@ public:
     const QList<Library>& get() const;
     void set(const QList<Library>& libraries);
     void append(const Library& library);
+    void replaceCurrentLibrary(const Library& library);
 
     // QAbstractItemModel interface
 public:

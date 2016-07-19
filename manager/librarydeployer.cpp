@@ -41,13 +41,17 @@ void LibraryDeployer::run()
 
     if (workingDir.check() != SourceStatus::OK)
         return emitFinish();
-    Library::removeDeployedFiles(workingDir.path);
 
     auto sourcesArchivePath = srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     QDir dstDir(workingDir.path);
+    auto unzippedArchiveDirName = Archive::rootName(sourcesArchivePath);
+    if (dstDir.exists(unzippedArchiveDirName)) {
+        auto oldArchiveDir = dstDir;
+        oldArchiveDir.cd(unzippedArchiveDirName);
+        oldArchiveDir.removeRecursively();
+    }
     JlCompress::extractDir(sourcesArchivePath, workingDir.path);
 
-    auto unzippedArchiveDirName = Archive::rootName(sourcesArchivePath);
     if (dstDir.cd(unzippedArchiveDirName))
         dstDir.cdUp();
     else
@@ -94,5 +98,5 @@ void LibraryDeployer::run()
 void LibraryDeployer::emitFinish()
 {
     QMetaObject::invokeMethod(widget, "onLibraryDeployed", Qt::QueuedConnection,
-                              Q_ARG(QString, library.version.toString()));
+                              Q_ARG(Library, library.afterAction(Library::Deploy)));
 }

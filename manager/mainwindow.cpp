@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    qRegisterMetaType<Library>("Library");
+
     librarySourceManagers = new LibrarySourceManagerList(this);
     connect(librarySourceManagers, SIGNAL(finishedUpdate(LibrarySource,QList<Library>)),
             this, SLOT(onUpdateFinished(LibrarySource,QList<Library>)));

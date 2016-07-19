@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "librarysourcemanagerlist.h"
 #include "librarydeployer.h"
+#include "libraryremover.h"
 #include <QDir>
 #include <QMessageBox>
 #include <QThreadPool>
@@ -22,8 +23,6 @@ LibrariesForm::LibrariesForm(MainWindow *parent) :
     ui->librariesTable->setColumnWidth(2, 150);
     ui->librariesTable->setColumnWidth(3, 50);
     ui->librariesTable->setColumnWidth(4, 50);
-
-    threadPool = new QThreadPool(this);
 
     clearLibrariesTable();
 
@@ -74,6 +73,7 @@ void LibrariesForm::download(Library library)
 
 void LibrariesForm::install(Library library)
 {
+    toInstall = Library::makeAbsent();
     if (!library.checkAbility(Library::Install))
         return;
     if (library.checkAbility(Library::Deploy)) {
@@ -89,46 +89,56 @@ void LibrariesForm::install(Library library)
                 return;
         }
 
-        int row = 0;
-        foreach (const auto& libraryInTable, librariesModel->get()) {
-            if (libraryInTable.source.type == LibrarySource::WorkingDirectory) {
-                librariesModel->removeRow(row);
-                break;
-            }
-            ++row;
+        if (LibraryRemover::checkHasDeployedFiles(resultLibrary.source.path)) {
+            waitedInstallAction = Library::Remove;
+            toInstall = library;
+            librariesModel->replaceCurrentLibrary(
+                        Library::makeAbsent(Settings::instance().workingDir()));
+            auto remover = new LibraryRemover(resultLibrary, this);
+            QThreadPool::globalInstance()->start(remover);
+            return;
         }
         auto deployer = new LibraryDeployer(library, this);
-        threadPool->start(deployer);
+        QThreadPool::globalInstance()->start(deployer);
         return;
     }
     if (library.checkAbility(Library::Download)) {
-        toInstall.insert(library.afterAction(Library::Download));
+        waitedInstallAction = Library::Download;
+        toInstall = library.afterAction(Library::Download);
         download(library);
+    }
+}
+
+void LibrariesForm::onLibraryDeployed(Library library)
+{
+    if (!library.validate())
+        qDebug() << "Failed to deploy library";
+    librariesModel->append(library);
+}
+
+void LibrariesForm::onLibraryRemoved(Library library)
+{
+    if (toInstall.exists()
+        && library.source.type == LibrarySource::WorkingDirectory
+        && waitedInstallAction == Library::Remove) {
+        if (!LibraryRemover::checkHasDeployedFiles(Settings::instance().workingDir().path))
+            install(toInstall);
     }
 }
 
 void LibrariesForm::onLibraryDownloaded(Library library)
 {
-    Library realLibrary = library;
-    if (!realLibrary.validate()) {
-        toInstall.remove(library);
+    bool waitedToInstall =
+            toInstall == library && waitedInstallAction == Library::Download;
+    if (waitedToInstall)
+        toInstall = Library::makeAbsent();
+    if (!library.validate()) {
         qDebug() << "Failed to download from " << library.source.path;
         return;
     }
-    librariesModel->append(realLibrary);
-    if (toInstall.contains(library)) {
-        toInstall.remove(library);
-        install(realLibrary);
-    }
-}
-
-void LibrariesForm::onLibraryDeployed(QString version)
-{
-    Library library{ Settings::instance().workingDir(),
-                Library::Deployed, Version::fromString(version), "" };
-    if (!library.validate())
-        qDebug() << "Failed to deploy library";
     librariesModel->append(library);
+    if (waitedToInstall)
+        install(library);
 }
 
 void LibrariesForm::onLibrariesSelectionChanged(const QItemSelection& selected, const QItemSelection&)
@@ -158,8 +168,13 @@ void LibrariesForm::on_removeButton_clicked()
     if (row == -1)
         return;
     auto library = librariesModel->get()[row];
-    librariesModel->removeRow(row);
-    library.remove();
+    if (row == 0)
+        librariesModel->replaceCurrentLibrary(
+                    Library::makeAbsent(Settings::instance().workingDir()));
+    else
+        librariesModel->removeRow(row);
+    auto remover = new LibraryRemover(library, this);
+    QThreadPool::globalInstance()->start(remover);
 }
 
 void LibrariesForm::on_installButton_clicked()

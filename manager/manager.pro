@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     librarysource.cpp \
     files.cpp \
     librarydeployer.cpp \
-    archive.cpp
+    archive.cpp \
+    libraryremover.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -58,7 +59,8 @@ HEADERS  += mainwindow.h \
     workingdirmanager.h \
     files.h \
     librarydeployer.h \
-    archive.h
+    archive.h \
+    libraryremover.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

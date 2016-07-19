@@ -22,9 +22,21 @@ Library checkDeployed(const LibrarySource& source, QDir dir)
     if (!version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME)))
         return Library::makeAbsent(source);
 
-    if (!Files::existsDir(dir, "src") || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME))
+    if (!Files::existsDir(dir, "src")
+        || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME)
+        || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME)
+        || !Files::existsDir(dir, Files::PACKAGE_DIR_NAME))
         return Library::makeAbsent(source);
 
+    if (!dir.cd(Files::CONTRIB_DIR_NAME))
+        return Library::makeAbsent(source);
+    if (!dir.cd(Files::BIN_DIR_NAME))
+        return Library::makeAbsent(source);
+    if (!Files::exists(dir, Files::EDITOR_PROJECT_NAME + ".exe"))
+        return Library::makeAbsent(source);
+
+    dir.cdUp();
+    dir.cdUp();
     dir.cdUp();
     if (!Files::exists(dir, Files::EDITOR_LINK_NAME))
         return Library::makeAbsent(source);
@@ -136,29 +148,9 @@ Library Library::afterAction(Library::Ability ability) const
     }
 }
 
-void Library::remove()
+bool Library::exists() const
 {
-    if (!checkAbility(Remove))
-        return;
-    switch (state) {
-    case BinaryArchive:
-    case SourceCode:
-    {
-        QDir dir(source.path);
-        if (!dir.cd(archiveName))
-            return;
-        dir.removeRecursively();
-        break;
-    }
-
-    case Deployed:
-    {
-        removeDeployedFiles(source.path);
-        break;
-    }
-
-    default: return;
-    }
+    return state != Absent;
 }
 
 Library Library::fromFileSystem(const LibrarySource& source, QString name)
@@ -191,15 +183,6 @@ Library Library::makeAbsent()
 {
     return Library::makeAbsent(
         LibrarySource{ LibrarySource::Directory, "", SourceStatus::Broken });
-}
-
-void Library::removeDeployedFiles(QString path)
-{
-    QDir dir(path);
-    dir.remove(Files::EDITOR_LINK_NAME);
-    if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
-        return;
-    dir.removeRecursively();
 }
 
 uint qHash(const Library& lib, uint seed)

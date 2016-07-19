@@ -38,15 +38,33 @@ void LibrariesTableModel::append(const Library& library)
 {
     if (librariesSet.contains(library))
         return;
-    librariesSet.insert(library);
     if (library.source.type == LibrarySource::WorkingDirectory) {
-        beginInsertRows(QModelIndex(), 0, 0);
-        libraries.prepend(library);
+        replaceCurrentLibrary(library);
     } else {
+        librariesSet.insert(library);
         beginInsertRows(QModelIndex(), libraries.size(), libraries.size());
         libraries.append(library);
+        endInsertRows();
     }
-    endInsertRows();
+}
+
+void LibrariesTableModel::replaceCurrentLibrary(const Library& library)
+{
+    if (libraries.empty()
+        || libraries[0].source.type != LibrarySource::WorkingDirectory) {
+        librariesSet.insert(library);
+        beginInsertRows(QModelIndex(), 0, 0);
+        libraries.prepend(library);
+        endInsertRows();
+        return;
+    }
+
+    if (libraries[0] == library)
+        return;
+    librariesSet.remove(libraries[0]);
+    librariesSet.insert(library);
+    libraries[0] = library;
+    emit dataChanged(index(0, 0), index(0, 4));
 }
 
 int LibrariesTableModel::rowCount(const QModelIndex&) const
