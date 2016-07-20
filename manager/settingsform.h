@@ -52,6 +52,8 @@ private slots:
 
     void on_chooseDownloadsDir_clicked();
 
+    void on_chooseVCVarsPath_clicked();
+
 private:
     Ui::SettingsForm *ui;
     MainWindow* mainWindow;

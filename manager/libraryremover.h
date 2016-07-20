@@ -3,17 +3,21 @@
 
 #include "library.h"
 #include <QRunnable>
+#include <QObject>
 
-class QWidget;
-
-class LibraryRemover : public QRunnable
+class LibraryRemover : public QObject, public QRunnable
 {
+    Q_OBJECT
+
 public:
-    LibraryRemover(const Library& library, QWidget* widget);
+    LibraryRemover(const Library& library);
 
     virtual void run() override;
 
     static bool checkHasDeployedFiles(QString path);
+
+signals:
+    void finishedRemove(Library library);
 
 private:
     void emitFinish();

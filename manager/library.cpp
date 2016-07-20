@@ -22,8 +22,7 @@ Library checkDeployed(const LibrarySource& source, QDir dir)
     if (!version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME)))
         return Library::makeAbsent(source);
 
-    if (!Files::existsDir(dir, "src")
-        || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME)
+    if (!Files::existsDir(dir, Files::SOURCES_DIR_NAME)
         || !Files::existsDir(dir, Files::RESOURCES_DIR_NAME)
         || !Files::existsDir(dir, Files::PACKAGE_DIR_NAME))
         return Library::makeAbsent(source);
@@ -100,12 +99,14 @@ bool Library::checkAbility(Library::Ability ability) const
 {
     switch (ability)
     {
-    case Download: return source.type != LibrarySource::DownloadsDirectory
-                && state != Absent;
     case Remove: return source.type != LibrarySource::Server
                 && state != Absent;
+    case Download: return source.type != LibrarySource::DownloadsDirectory
+                && state != Absent;
+    case Compile: return source.type != LibrarySource::Server
+                && state == SourceCode;
     case Deploy: return source.type == LibrarySource::DownloadsDirectory
-                && state == BinaryArchive;
+                && (state == BinaryArchive || state == SourceCode);
     case Install: return source.type != LibrarySource::WorkingDirectory
                 && state != Absent;
     default: return false;

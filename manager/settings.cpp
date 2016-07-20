@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QProcessEnvironment>
 
 namespace {
 const QString DEFAULT_WORKING_DIR = "programs";
@@ -12,7 +13,27 @@ const LibrarySource DEFAULT_LIBRARY_SOURCE{
     LibrarySource::Server,
     "https://github.com/TheMrButcher/gamebase",
     SourceStatus::Unknown };
-const QString DEFAULT_TEMP_DIR = "temp";
+const QString MSVC_2010_TOOLS_KEY = "VS100COMNTOOLS";
+const QString VC_VARS_BAT_NAME = "vcvarsall.bat";
+
+QString extractVCVarsPath()
+{
+    auto env = QProcessEnvironment::systemEnvironment();
+    if (!env.contains(MSVC_2010_TOOLS_KEY))
+        return QString();
+    QDir vcDir(env.value(MSVC_2010_TOOLS_KEY));
+    if (!vcDir.exists())
+        return QString();
+    if (!vcDir.cdUp())
+        return QString();
+    if (!vcDir.cdUp())
+        return QString();
+    if (!vcDir.cd("VC"))
+        return QString();
+    if (!vcDir.exists(VC_VARS_BAT_NAME))
+        return QString();
+    return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
+}
 }
 
 bool Settings::read(QString fname)
@@ -30,6 +51,7 @@ bool Settings::read(QString fname)
     auto rootObj = json.object();
     auto workingDir = rootObj["workingDir"].toString(this->workingDir().path);
     auto downloadsDir = rootObj["downloadsDir"].toString(this->downloadsDir().path);
+    vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
@@ -71,6 +93,7 @@ void Settings::write(QString fname)
     QJsonObject rootObj;
     rootObj["workingDir"] = workingDir().path;
     rootObj["downloadsDir"] = downloadsDir().path;
+    rootObj["vcVarsPath"] = vcVarsPath;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
@@ -126,7 +149,7 @@ Settings Settings::defaultValue()
     librarySources.append(LibrarySource{
             LibrarySource::DownloadsDirectory, downloadsPath, SourceStatus::Unknown });
 
-    return Settings{ librarySources, QList<AppSource>() };
+    return Settings{ librarySources, QList<AppSource>(), extractVCVarsPath() };
 }
 
 Settings& Settings::instance()

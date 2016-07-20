@@ -5,8 +5,14 @@
 #include <JlCompress.h>
 #include <QWidget>
 #include <QDir>
+#include <QProcess>
+
+#include <QThread>
+#include <QDebug>
 
 namespace {
+const QString COMPILATION_BATCH_NAME = "compile.bat";
+
 void copyDir(QString srcPath, QString dstPath)
 {
     QDir srcDir(srcPath);
@@ -26,9 +32,8 @@ void copyDir(QString srcPath, QString dstPath)
 }
 }
 
-LibraryDeployer::LibraryDeployer(const Library& library, QWidget* widget)
+LibraryDeployer::LibraryDeployer(const Library& library)
     : library(library)
-    , widget(widget)
 {
     workingDir = Settings::instance().workingDir();
 }
@@ -42,8 +47,34 @@ void LibraryDeployer::run()
     if (workingDir.check() != SourceStatus::OK)
         return emitFinish();
 
-    auto sourcesArchivePath = srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     QDir dstDir(workingDir.path);
+    if (!unarchiveSources(srcDir, dstDir))
+        return emitFinish();
+
+    dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
+    auto contribDir = dstDir;
+    contribDir.cd(Files::CONTRIB_DIR_NAME);
+    auto contribBinPath = contribDir.absoluteFilePath(Files::BIN_DIR_NAME);
+
+    if (library.state == Library::BinaryArchive) {
+        auto binariesArchivePath = srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME);
+        JlCompress::extractDir(binariesArchivePath, contribBinPath);
+    } else {
+        if (!compileSources(dstDir))
+            return emitFinish();
+    }
+
+    contribDir.cd(Files::BIN_DIR_NAME);
+    dstDir.cdUp();
+    QFile::link(contribDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME + ".exe"),
+                dstDir.absoluteFilePath(Files::EDITOR_LINK_NAME));
+
+    emitFinish();
+}
+
+bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
+{
+    auto sourcesArchivePath = srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     auto unzippedArchiveDirName = Archive::rootName(sourcesArchivePath);
     if (dstDir.exists(unzippedArchiveDirName)) {
         auto oldArchiveDir = dstDir;
@@ -55,9 +86,9 @@ void LibraryDeployer::run()
     if (dstDir.cd(unzippedArchiveDirName))
         dstDir.cdUp();
     else
-        return emitFinish();
+        return false;
     if (!dstDir.rename(unzippedArchiveDirName, Files::DEPLOYED_ROOT_DIR_NAME))
-        return emitFinish();
+        return false;
     dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
 
     auto packageDir = dstDir;
@@ -83,20 +114,57 @@ void LibraryDeployer::run()
     resourcesDir.cd(Files::DESIGNS_DIR_NAME);
     copyDir(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
             contribBinPath);
+    return true;
+}
 
-    auto binariesArchivePath = srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME);
-    JlCompress::extractDir(binariesArchivePath, contribBinPath);
+bool LibraryDeployer::compileSources(QDir dir)
+{
+    qDebug() << "Started compilation";
+    dir.cd(Files::SOURCES_DIR_NAME);
+    dir.cd(Files::GAMEBASE_PROJECT_NAME);
+    if (!compileProject(dir))
+        return false;
+    dir.cdUp();
+    dir.cd(Files::EDITOR_PROJECT_NAME);
+    if (!compileProject(dir))
+        return false;
+    return true;
+}
 
-    contribDir.cd(Files::BIN_DIR_NAME);
-    dstDir.cdUp();
-    QFile::link(contribDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME + ".exe"),
-                dstDir.absoluteFilePath(Files::EDITOR_LINK_NAME));
+bool LibraryDeployer::compileProject(QDir projectDir)
+{
+    QFile::copy(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
 
-    emitFinish();
+    QProcess cmdProcess;
+    cmdProcess.setWorkingDirectory(projectDir.absolutePath());
+    cmdProcess.setProcessChannelMode(QProcess::MergedChannels);
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    auto vcVarsPath = Settings::instance().vcVarsPath;
+    if (vcVarsPath.isEmpty())
+        return false;
+    env.insert("VISUAL_CPP_VARIABLES_PATH", vcVarsPath);
+    env.insert("SOLUTION_TO_BUILD_NAME", projectDir.dirName() + ".sln");
+    cmdProcess.setProcessEnvironment(env);
+
+    QStringList arguments;
+    arguments << "/U" << "/C" << COMPILATION_BATCH_NAME;
+    cmdProcess.start("cmd.exe", arguments);
+    qDebug() << "Started process";
+    if (!cmdProcess.waitForStarted(5000))
+        return false;
+    while (cmdProcess.state() == QProcess::Running) {
+        while (cmdProcess.waitForReadyRead(2000)) {
+            while (cmdProcess.canReadLine())
+                qDebug() << QString::fromUtf8(cmdProcess.readLine());
+        }
+    }
+    while (cmdProcess.canReadLine())
+        qDebug() << QString::fromUtf8(cmdProcess.readLine());
+    return cmdProcess.exitCode() == 0;
 }
 
 void LibraryDeployer::emitFinish()
 {
-    QMetaObject::invokeMethod(widget, "onLibraryDeployed", Qt::QueuedConnection,
-                              Q_ARG(Library, library.afterAction(Library::Deploy)));
+    emit finishedDeploy(library.afterAction(Library::Deploy));
 }

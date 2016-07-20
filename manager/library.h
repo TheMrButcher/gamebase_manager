@@ -20,8 +20,9 @@ public:
     QString archiveName;
 
     enum Ability {
-        Download,
         Remove,
+        Download,
+        Compile,
         Deploy,
         Install
     };

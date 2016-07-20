@@ -62,6 +62,7 @@ void SettingsForm::set(const Settings& settings)
     }
     librarySourcesModel->set(librarySources);
     appSourcesModel->set(settings.appSources);
+    ui->vcVarsPath->setText(settings.vcVarsPath);
 }
 
 Settings SettingsForm::get() const
@@ -72,7 +73,9 @@ Settings SettingsForm::get() const
         LibrarySource::WorkingDirectory, ui->workingDir->text(), SourceStatus::Unknown });
     result.librarySources.append(LibrarySource{
         LibrarySource::DownloadsDirectory, ui->downloadsDir->text(), SourceStatus::Unknown });
+
     result.appSources = appSourcesModel->get();
+    result.vcVarsPath = ui->vcVarsPath->text();
     return result;
 }
 
@@ -179,5 +182,14 @@ void SettingsForm::on_chooseDownloadsDir_clicked()
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке для загрузок");
     if (!path.isEmpty()) {
         ui->downloadsDir->setText(path);
+    }
+}
+
+void SettingsForm::on_chooseVCVarsPath_clicked()
+{
+    QString path = QFileDialog::getOpenFileName(this, "Ввод пути к vcvarsall.bat",
+                                                "C:/", "Batch-script (*.bat)");
+    if (!path.isEmpty()) {
+        ui->vcVarsPath->setText(path);
     }
 }

@@ -1,11 +1,12 @@
 #include "files.h"
 #include <QFile>
 
+const QString Files::GAMEBASE_PROJECT_NAME = "gamebase";
 const QString Files::BINARY_ARCHIVE_NAME = "bin.zip";
 const QString Files::SOURCES_ARCHIVE_NAME = "sources.zip";
 const QString Files::VERSION_FILE_NAME = "VERSION.txt";
 const QString Files::EDITOR_LINK_NAME = "DesignEditor.lnk";
-const QString Files::DEPLOYED_ROOT_DIR_NAME = "gamebase";
+const QString Files::DEPLOYED_ROOT_DIR_NAME = Files::GAMEBASE_PROJECT_NAME;
 const QString Files::CONTRIB_DIR_NAME = "contrib";
 const QString Files::BIN_DIR_NAME = "bin";
 const QString Files::INCLUDE_DIR_NAME = "include";
@@ -14,6 +15,7 @@ const QString Files::EDITOR_PROJECT_NAME = "design_editor";
 const QString Files::RESOURCES_DIR_NAME = "resources";
 const QString Files::DESIGNS_DIR_NAME = "designs";
 const QString Files::FONTS_DIR_NAME = "fonts";
+const QString Files::SOURCES_DIR_NAME = "src";
 
 bool Files::exists(const QDir& dir, QString fname)
 {

@@ -76,6 +76,14 @@ void LibrariesForm::install(Library library)
     toInstall = Library::makeAbsent();
     if (!library.checkAbility(Library::Install))
         return;
+    if (library.state == Library::SourceCode) {
+        if (Settings::instance().vcVarsPath.isEmpty()) {
+            QMessageBox::warning(this, "Не указан путь к vcvarsall.bat",
+                                 "Для компиляции кода необходим Microsoft Visual Studio 2010. "
+                                 "Пожалуйста, укажите путь к файлу vcvarsall.bat.");
+            return;
+        }
+    }
     if (library.checkAbility(Library::Deploy)) {
         auto resultLibrary = library.afterAction(Library::Deploy);
         if (resultLibrary.source.check() != SourceStatus::OK) {
@@ -94,11 +102,12 @@ void LibrariesForm::install(Library library)
             toInstall = library;
             librariesModel->replaceCurrentLibrary(
                         Library::makeAbsent(Settings::instance().workingDir()));
-            auto remover = new LibraryRemover(resultLibrary, this);
-            QThreadPool::globalInstance()->start(remover);
+            remove(resultLibrary);
             return;
         }
-        auto deployer = new LibraryDeployer(library, this);
+        auto deployer = new LibraryDeployer(library);
+        connect(deployer, SIGNAL(finishedDeploy(Library)),
+                this, SLOT(onLibraryDeployed(Library)));
         QThreadPool::globalInstance()->start(deployer);
         return;
     }
@@ -173,8 +182,7 @@ void LibrariesForm::on_removeButton_clicked()
                     Library::makeAbsent(Settings::instance().workingDir()));
     else
         librariesModel->removeRow(row);
-    auto remover = new LibraryRemover(library, this);
-    QThreadPool::globalInstance()->start(remover);
+    remove(library);
 }
 
 void LibrariesForm::on_installButton_clicked()
@@ -191,4 +199,12 @@ int LibrariesForm::selectedRow() const
     if (rows.empty())
         return -1;
     return rows[0].row();
+}
+
+void LibrariesForm::remove(Library library)
+{
+    auto remover = new LibraryRemover(library);
+    connect(remover, SIGNAL(finishedRemove(Library)),
+            this, SLOT(onLibraryRemoved(Library)));
+    QThreadPool::globalInstance()->start(remover);
 }

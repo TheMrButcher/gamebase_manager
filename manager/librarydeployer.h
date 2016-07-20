@@ -3,21 +3,28 @@
 
 #include "library.h"
 #include <QRunnable>
+#include <QObject>
+#include <QDir>
 
-class QWidget;
-
-class LibraryDeployer : public QRunnable
+class LibraryDeployer : public QObject, public QRunnable
 {
+    Q_OBJECT
+
 public:
-    LibraryDeployer(const Library& library, QWidget* widget);
+    LibraryDeployer(const Library& library);
 
     virtual void run() override;
 
+signals:
+    void finishedDeploy(Library library);
+
 private:
+    bool unarchiveSources(QDir srcDir, QDir dstDir);
+    bool compileSources(QDir dir);
+    bool compileProject(QDir projectDir);
     void emitFinish();
 
     Library library;
-    QWidget* widget;
     LibrarySource workingDir;
 };
 

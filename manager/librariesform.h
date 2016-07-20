@@ -24,11 +24,9 @@ public:
     void download(Library library);
     void install(Library library);
 
-public slots:
+private slots:
     void onLibraryDeployed(Library library);
     void onLibraryRemoved(Library library);
-
-private slots:
     void onLibraryDownloaded(Library library);
 
     void onLibrariesSelectionChanged(const QItemSelection &selected, const QItemSelection &);
@@ -41,6 +39,7 @@ private slots:
 
 private:
     int selectedRow() const;
+    void remove(Library library);
 
     Ui::LibrariesForm *ui;
     LibrariesTableModel* librariesModel;

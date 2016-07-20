@@ -3,9 +3,8 @@
 #include <QWidget>
 #include <QDir>
 
-LibraryRemover::LibraryRemover(const Library& library, QWidget* widget)
+LibraryRemover::LibraryRemover(const Library& library)
     : library(library)
-    , widget(widget)
 {}
 
 void LibraryRemover::run()
@@ -48,6 +47,5 @@ bool LibraryRemover::checkHasDeployedFiles(QString path)
 
 void LibraryRemover::emitFinish()
 {
-    QMetaObject::invokeMethod(widget, "onLibraryRemoved", Qt::QueuedConnection,
-                              Q_ARG(Library, library));
+    emit finishedRemove(library);
 }
