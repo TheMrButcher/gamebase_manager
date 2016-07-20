@@ -5,11 +5,13 @@
 #include <QObject>
 #include <QHash>
 
+class QWidget;
+
 class LibrarySourceManagerList : public QObject
 {
     Q_OBJECT
 public:
-    explicit LibrarySourceManagerList(QObject *parent = 0);
+    explicit LibrarySourceManagerList(QWidget* parent);
 
     static LibrarySourceManagerList* instance();
 
@@ -26,6 +28,7 @@ private:
     void insert(const LibrarySource& source);
 
     QHash<LibrarySource, LibrarySourceManager*> managers;
+    QWidget* parent;
 };
 
 #endif // LIBRARYSOURCEMANAGERLIST_H

@@ -8,6 +8,8 @@
 #include <QJsonObject>
 #include <QDir>
 #include <QFile>
+#include <QProgressDialog>
+#include <QProgressBar>
 
 namespace {
 const QString GITHUB_HOST_NAME = "github.com";
@@ -26,10 +28,11 @@ QNetworkRequest makeRequest(QUrl url, const char* accept)
 }
 }
 
-GithubLibraryDownloader::GithubLibraryDownloader(const LibrarySource& source, QObject* parent)
+GithubLibraryDownloader::GithubLibraryDownloader(const LibrarySource& source, QWidget* parent)
     : LibrarySourceManager(parent)
     , source(source)
     , fatalError(false)
+    , parent(parent)
 {
     networkManager = new QNetworkAccessManager(parent);
     int hostNameStart = source.path.indexOf(GITHUB_HOST_NAME);
@@ -42,6 +45,7 @@ GithubLibraryDownloader::GithubLibraryDownloader(const LibrarySource& source, QO
     }
 
     connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
+    progressDialog = nullptr;
 }
 
 void GithubLibraryDownloader::update()
@@ -52,7 +56,6 @@ void GithubLibraryDownloader::update()
     }
 
     QUrl url(apiUrl + RELEASES_SUFFIX);
-    qDebug() << "Request to " << url.toString();
     networkManager->get(makeRequest(url, "application/vnd.github.v3+json"));
 }
 
@@ -60,6 +63,11 @@ void GithubLibraryDownloader::download(const Library& library)
 {
     Library resultLibrary = library.afterAction(Library::Download);
     if (networkManager->networkAccessible() != QNetworkAccessManager::Accessible) {
+        emit finishedDownload(resultLibrary);
+        return;
+    }
+
+    if (!downloadRequests.empty()) {
         emit finishedDownload(resultLibrary);
         return;
     }
@@ -116,28 +124,43 @@ void GithubLibraryDownloader::startDownload(
     }
     dir.mkdir(resultLibrary.archiveName);
     if (!dir.cd(resultLibrary.archiveName)) {
-        emit finishedDownload(Library::makeAbsent(source));
+        emit finishedDownload(resultLibrary);
         return;
     }
 
-    if (filesToDownload.contains(resultLibrary.archiveName))
-        return;
+    libraryToDownload = resultLibrary;
+
+    if (!progressDialog) {
+        progressDialog = new QProgressDialog(parent);
+
+        auto bar = new QProgressBar(progressDialog);
+        bar->setTextVisible(false);
+        progressDialog->setBar(bar);
+
+        progressDialog->setWindowTitle("Загрузка");
+        progressDialog->setMinimumDuration(0);
+        progressDialog->setRange(0, 0);
+        progressDialog->setModal(true);
+        connect(progressDialog, SIGNAL(canceled()), this, SLOT(onCancel()));
+    }
+    progressDialog->setLabelText("");
+    progressDialog->show();
 
     if (library.state == Library::BinaryArchive) {
         QUrl binUrl(assetObj["browser_download_url"].toString());
         auto binFilePath = dir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME);
-        filesToDownload[resultLibrary.archiveName].append(binFilePath);
-        downloadRequests[binUrl.toString()] = DownloadDesc{
-            DownloadDesc::Binaries, resultLibrary, binFilePath };
-        networkManager->get(makeRequest(binUrl, "application/octet-stream"));
+        auto reply = networkManager->get(makeRequest(binUrl, "application/octet-stream"));
+        downloadRequests[binUrl.toString()] = DownloadDesc(binFilePath, reply);
+        connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
+                this, SLOT(onDownload(qint64,qint64)));
     }
 
     QUrl sourcesUrl(releaseObj["zipball_url"].toString());
     auto sourcesFilePath = dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
-    filesToDownload[resultLibrary.archiveName].append(sourcesFilePath);
-    downloadRequests[sourcesUrl.toString()] = DownloadDesc{
-        DownloadDesc::Sources, resultLibrary, sourcesFilePath };
-    networkManager->get(makeRequest(sourcesUrl, "application/vnd.github.v3+json"));
+    auto reply = networkManager->get(makeRequest(sourcesUrl, "application/vnd.github.v3+json"));
+    downloadRequests[sourcesUrl.toString()] = DownloadDesc(sourcesFilePath, reply);
+    connect(reply, SIGNAL(downloadProgress(qint64,qint64)),
+            this, SLOT(onDownload(qint64,qint64)));
 }
 
 void GithubLibraryDownloader::replyFinished(QNetworkReply* reply)
@@ -156,33 +179,49 @@ void GithubLibraryDownloader::replyFinished(QNetworkReply* reply)
         qDebug() << "Network error: " << reply->errorString();
 
     bool isDownload = downloadRequests.contains(key);
-    Library resultLibrary;
     if (isDownload) {
-        resultLibrary = downloadRequests[key].library;
-        processDownload(reply, body, resultLibrary);
+        processDownload(reply, body);
     } else {
         processReleases(reply, body);
     }
-    downloadRequests.remove(key);
     if (isDownload) {
+        downloadRequests[key].isRunning = false;
         bool areAllDownloadsFinished = true;
         foreach (const auto& desc, downloadRequests.values()) {
-            if (desc.library.version == resultLibrary.version
-                && desc.library.state == resultLibrary.state)
+            if (desc.isRunning)
                 areAllDownloadsFinished = false;
         }
-        bool areAllFilesCreated = true;
-        foreach (const auto& path, filesToDownload[resultLibrary.archiveName]) {
-            QFile file(path);
-            if (!file.exists())
-                areAllFilesCreated = false;
-        }
-        if (areAllDownloadsFinished && areAllFilesCreated) {
-            filesToDownload.remove(resultLibrary.archiveName);
-            emit finishedDownload(resultLibrary);
+        if (areAllDownloadsFinished) {
+            downloadRequests.clear();
+            progressDialog->hide();
+            emit finishedDownload(libraryToDownload);
         }
     }
     reply->deleteLater();
+}
+
+void GithubLibraryDownloader::onDownload(qint64 bytesReceived, qint64 /*bytesTotal*/)
+{
+    auto sender = QObject::sender();
+    int received = 0;
+    for (auto it = downloadRequests.begin(); it != downloadRequests.end(); ++it) {
+        DownloadDesc& desc = it.value();
+        if (desc.reply == sender)
+            desc.bytesReceived = bytesReceived;
+        received += static_cast<int>(desc.bytesReceived);
+    }
+
+    progressDialog->setLabelText(QString("Загружено %1 МБ").arg(received / (1024.0 * 1024.0)));
+}
+
+void GithubLibraryDownloader::onCancel()
+{
+    foreach (const auto& desc, downloadRequests.values()) {
+        if (desc.isRunning)
+            desc.reply->abort();
+    }
+    progressDialog->hide();
+    emit finishedDownload(libraryToDownload);
 }
 
 void GithubLibraryDownloader::reportBrokenSource()
@@ -194,8 +233,6 @@ void GithubLibraryDownloader::reportBrokenSource()
 
 void GithubLibraryDownloader::processReleases(QNetworkReply* reply, const QByteArray& body)
 {
-    qDebug() << "Got releases";
-
     if (reply->error() != QNetworkReply::NoError) {
         reportBrokenSource();
         return;
@@ -228,25 +265,22 @@ void GithubLibraryDownloader::processReleases(QNetworkReply* reply, const QByteA
     reportBrokenSource();
 }
 
-void GithubLibraryDownloader::processDownload(
-        QNetworkReply* reply, const QByteArray& body, const Library& resultLibrary)
+void GithubLibraryDownloader::processDownload(QNetworkReply* reply, const QByteArray& body)
 {
-    qDebug() << "Downloaded " << body.size() << " bytes";
-
     if (reply->error() != QNetworkReply::NoError) {
-        emit finishedDownload(resultLibrary);
+        emit finishedDownload(libraryToDownload);
         return;
     }
 
     auto downloadsDir = Settings::instance().downloadsDir();
     if (downloadsDir.check() != SourceStatus::OK) {
-        emit finishedDownload(resultLibrary);
+        emit finishedDownload(libraryToDownload);
         return;
     }
     const auto& desc = downloadRequests[reply->request().url().toString()];
     QFile resultFile(desc.resultFileName);
     if (!resultFile.open(QIODevice::WriteOnly)) {
-        emit finishedDownload(resultLibrary);
+        emit finishedDownload(libraryToDownload);
         return;
     }
     resultFile.write(body);

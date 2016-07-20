@@ -16,6 +16,8 @@ LibrariesForm::LibrariesForm(MainWindow *parent) :
 {
     ui->setupUi(this);
 
+    hasActiveDownload = false;
+
     librariesModel = new LibrariesTableModel(this);
     ui->librariesTable->setModel(librariesModel);
     ui->librariesTable->setColumnWidth(0, 60);
@@ -68,6 +70,8 @@ void LibrariesForm::download(Library library)
         onLibraryDownloaded(resultLibrary);
         return;
     }
+    hasActiveDownload = true;
+    updateButtons();
     LibrarySourceManagerList::instance()->download(library);
 }
 
@@ -137,30 +141,24 @@ void LibrariesForm::onLibraryRemoved(Library library)
 
 void LibrariesForm::onLibraryDownloaded(Library library)
 {
+    hasActiveDownload = false;
     bool waitedToInstall =
             toInstall == library && waitedInstallAction == Library::Download;
     if (waitedToInstall)
         toInstall = Library::makeAbsent();
     if (!library.validate()) {
-        qDebug() << "Failed to download from " << library.source.path;
+        qDebug() << "Failed to download library";
         return;
     }
     librariesModel->append(library);
     if (waitedToInstall)
         install(library);
+    updateButtons();
 }
 
-void LibrariesForm::onLibrariesSelectionChanged(const QItemSelection& selected, const QItemSelection&)
+void LibrariesForm::onLibrariesSelectionChanged(const QItemSelection&, const QItemSelection&)
 {
-    if (selected.empty()) {
-        ui->downloadButton->setEnabled(false);
-    } else {
-        int row = selected[0].bottom();
-        const auto& library = librariesModel->get()[row];
-        ui->downloadButton->setEnabled(library.checkAbility(Library::Download));
-        ui->removeButton->setEnabled(library.checkAbility(Library::Remove));
-        ui->installButton->setEnabled(library.checkAbility(Library::Install));
-    }
+    updateButtons();
 }
 
 void LibrariesForm::on_downloadButton_clicked()
@@ -207,4 +205,20 @@ void LibrariesForm::remove(Library library)
     connect(remover, SIGNAL(finishedRemove(Library)),
             this, SLOT(onLibraryRemoved(Library)));
     QThreadPool::globalInstance()->start(remover);
+}
+
+void LibrariesForm::updateButtons()
+{
+    auto rows = ui->librariesTable->selectionModel()->selectedRows();
+    if (rows.isEmpty()) {
+        ui->downloadButton->setEnabled(false);
+        ui->removeButton->setEnabled(false);
+        ui->installButton->setEnabled(false);
+    } else {
+        int row = rows[0].row();
+        const auto& library = librariesModel->get()[row];
+        ui->downloadButton->setEnabled(library.checkAbility(Library::Download) && !hasActiveDownload);
+        ui->removeButton->setEnabled(library.checkAbility(Library::Remove));
+        ui->installButton->setEnabled(library.checkAbility(Library::Install) && !hasActiveDownload);
+    }
 }

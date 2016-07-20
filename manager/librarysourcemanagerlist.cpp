@@ -1,8 +1,10 @@
 #include "librarysourcemanagerlist.h"
 #include <QSet>
+#include <QWidget>
 
-LibrarySourceManagerList::LibrarySourceManagerList(QObject *parent)
+LibrarySourceManagerList::LibrarySourceManagerList(QWidget* parent)
     : QObject(parent)
+    , parent(parent)
 {}
 
 void LibrarySourceManagerList::set(const QList<LibrarySource>& sources)
@@ -40,7 +42,7 @@ void LibrarySourceManagerList::download(const Library& library)
 {
     auto it = managers.find(library.source);
     if (it == managers.end()) {
-        emit finishedDownload(Library::makeAbsent(library.source));
+        emit finishedDownload(library.afterAction(Library::Download));
         return;
     }
     it.value()->download(library);
@@ -48,7 +50,7 @@ void LibrarySourceManagerList::download(const Library& library)
 
 void LibrarySourceManagerList::insert(const LibrarySource& source)
 {
-    auto manager = LibrarySourceManager::create(source, this);
+    auto manager = LibrarySourceManager::create(source, parent);
     if (!manager)
         return;
     managers[source] = manager;

@@ -5,6 +5,8 @@
 #include "library.h"
 #include <QObject>
 
+class QWidget;
+
 class LibrarySourceManager : public QObject
 {
     Q_OBJECT
@@ -14,7 +16,7 @@ public:
         : QObject(parent)
     {}
 
-    static LibrarySourceManager* create(const LibrarySource& source, QObject* parent = nullptr);
+    static LibrarySourceManager* create(const LibrarySource& source, QWidget* parent);
 
     virtual void update() = 0;
     virtual void download(const Library& library) = 0;

@@ -40,11 +40,14 @@ private slots:
 private:
     int selectedRow() const;
     void remove(Library library);
+    void updateButtons();
 
-    Ui::LibrariesForm *ui;
+    Ui::LibrariesForm* ui;
     LibrariesTableModel* librariesModel;
     Library toInstall;
     Library::Ability waitedInstallAction;
+
+    bool hasActiveDownload;
 };
 
 #endif // LIBRARIESFORM_H
