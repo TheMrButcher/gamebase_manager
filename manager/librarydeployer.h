@@ -22,6 +22,7 @@ private:
     bool unarchiveSources(QDir srcDir, QDir dstDir);
     bool compileSources(QDir dir);
     bool compileProject(QDir projectDir);
+    bool compileProject(QDir projectDir, QString scriptName);
     void emitFinish();
 
     Library library;

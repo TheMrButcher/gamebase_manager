@@ -23,7 +23,6 @@ private:
     void emitFinish();
 
     Library library;
-    QWidget* widget;
 };
 
 #endif // LIBRARYREMOVER_H

@@ -19,17 +19,23 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void updateLibrarySources(const QList<LibrarySource>& sources);
+    void update(const Settings& curSettings);
 
 public slots:
+    void update();
     void updateLibrarySources();
+    void updateAppSources();
 
 private slots:
     void on_aboutAction_triggered();
 
-    void onUpdateFinished(LibrarySource source, const QList<Library>& libraries);
+    void onLibrarySourceUpdateFinished(LibrarySource source, const QList<Library>& libraries);
+    void onAppSourceUpdateFinished(AppSource source, const QList<App>& apps);
 
 private:
+    void updateLibrarySources(const Settings& curSettings);
+    void updateAppSources(const Settings& curSettings);
+
     Ui::MainWindow *ui;
     AboutWindow* about;
     SettingsForm* settings;

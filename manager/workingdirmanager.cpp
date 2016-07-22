@@ -16,5 +16,5 @@ void WorkingDirManager::update()
 
 void WorkingDirManager::download(const Library& library)
 {
-    emit finishedDownload(Library::makeAbsent(source));
+    emit finishedDownload(library.afterAction(Library::Download));
 }

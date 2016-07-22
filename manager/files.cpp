@@ -1,5 +1,6 @@
 #include "files.h"
 #include <QFile>
+#include <QTextStream>
 
 const QString Files::GAMEBASE_PROJECT_NAME = "gamebase";
 const QString Files::BINARY_ARCHIVE_NAME = "bin.zip";
@@ -16,6 +17,8 @@ const QString Files::RESOURCES_DIR_NAME = "resources";
 const QString Files::DESIGNS_DIR_NAME = "designs";
 const QString Files::FONTS_DIR_NAME = "fonts";
 const QString Files::SOURCES_DIR_NAME = "src";
+const QString Files::APP_CONFIG_NAME = "Config.json";
+const QString Files::APP_PROJECT_NAME = "ManagerProject.json";
 
 bool Files::exists(const QDir& dir, QString fname)
 {
@@ -26,4 +29,25 @@ bool Files::exists(const QDir& dir, QString fname)
 bool Files::existsDir(const QDir& dir, QString fname)
 {
     return QDir(dir).cd(fname);
+}
+
+bool Files::copyTextFile(QString srcPath, QString dstPath, bool withBOM)
+{
+    QFile file(srcPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    return writeTextFile(QString::fromUtf8(file.readAll()), dstPath, withBOM);
+}
+
+bool Files::writeTextFile(QString data, QString dstPath, bool withBOM)
+{
+    QFile file(dstPath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    QTextStream stream(&file);
+    if (withBOM)
+        stream.setCodec("UTF-8");
+    stream.setGenerateByteOrderMark(withBOM);
+    stream << data;
+    return true;
 }

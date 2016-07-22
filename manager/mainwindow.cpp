@@ -2,14 +2,21 @@
 #include "ui_mainwindow.h"
 #include "settings.h"
 #include "librarysourcemanagerlist.h"
+#include "appsourcemanagerlist.h"
 
 namespace {
 LibrarySourceManagerList* librarySourceManagers;
+AppSourceManagerList* appSourceManagers;
 }
 
 LibrarySourceManagerList* LibrarySourceManagerList::instance()
 {
     return librarySourceManagers;
+}
+
+AppSourceManagerList* AppSourceManagerList::instance()
+{
+    return appSourceManagers;
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -21,8 +28,11 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<Library>("Library");
 
     librarySourceManagers = new LibrarySourceManagerList(this);
+    appSourceManagers = new AppSourceManagerList(this);
     connect(librarySourceManagers, SIGNAL(finishedUpdate(LibrarySource,QList<Library>)),
-            this, SLOT(onUpdateFinished(LibrarySource,QList<Library>)));
+            this, SLOT(onLibrarySourceUpdateFinished(LibrarySource,QList<Library>)));
+    connect(appSourceManagers, SIGNAL(finishedUpdate(AppSource,QList<App>)),
+            this, SLOT(onAppSourceUpdateFinished(AppSource,QList<App>)));
 
     about = new AboutWindow(this);
 
@@ -37,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     librarySourceManagers->set(Settings::instance().librarySources);
     librarySourceManagers->fastUpdate();
+    appSourceManagers->set(Settings::instance().appSources);
+    appSourceManagers->update();
 }
 
 MainWindow::~MainWindow()
@@ -44,17 +56,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::updateLibrarySources(const QList<LibrarySource>& sources)
+void MainWindow::update(const Settings& curSettings)
 {
-    settings->setAllUnknown();
-    libraries->clearLibrariesTable();
-    librarySourceManagers->set(sources);
-    librarySourceManagers->update();
+    updateLibrarySources(curSettings);
+    updateAppSources(curSettings);
+}
+
+void MainWindow::update()
+{
+    update(Settings::instance());
 }
 
 void MainWindow::updateLibrarySources()
 {
-    updateLibrarySources(Settings::instance().librarySources);
+    updateLibrarySources(Settings::instance());
+}
+
+void MainWindow::updateAppSources()
+{
+    updateAppSources(Settings::instance());
 }
 
 void MainWindow::on_aboutAction_triggered()
@@ -62,8 +82,30 @@ void MainWindow::on_aboutAction_triggered()
     about->show();
 }
 
-void MainWindow::onUpdateFinished(LibrarySource source, const QList<Library>& libraries)
+void MainWindow::onLibrarySourceUpdateFinished(LibrarySource source, const QList<Library>& libraries)
 {
     settings->updateLibrarySource(source);
     this->libraries->append(libraries);
+}
+
+void MainWindow::onAppSourceUpdateFinished(AppSource source, const QList<App>& apps)
+{
+    settings->updateAppSource(source);
+    this->apps->append(apps);
+}
+
+void MainWindow::updateLibrarySources(const Settings& curSettings)
+{
+    settings->setAllLibrarySourcesUnknown();
+    libraries->clearLibrariesTable();
+    librarySourceManagers->set(curSettings.librarySources);
+    librarySourceManagers->update();
+}
+
+void MainWindow::updateAppSources(const Settings& curSettings)
+{
+    settings->setAllAppSourcesUnknown();
+    apps->clearAppsTable();
+    appSourceManagers->set(curSettings.appSources);
+    appSourceManagers->update();
 }

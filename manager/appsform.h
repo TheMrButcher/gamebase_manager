@@ -8,13 +8,21 @@ namespace Ui {
 class AppsForm;
 }
 
+class MainWindow;
+
 class AppsForm : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit AppsForm(QWidget *parent = 0);
+    explicit AppsForm(MainWindow *parent = 0);
     ~AppsForm();
+
+    void clearAppsTable();
+    void append(const QList<App>& apps);
+
+private slots:
+    void on_createButton_clicked();
 
 private:
     Ui::AppsForm *ui;

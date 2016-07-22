@@ -14,6 +14,7 @@ public:
     QList<AppSource> get() const;
     void set(const QList<AppSource>& sources);
     void append(const AppSource& source);
+    void update(const AppSource& source);
 
     // QAbstractItemModel interface
 public:

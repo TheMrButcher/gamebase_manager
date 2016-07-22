@@ -28,6 +28,19 @@ void AppSourcesTableModel::append(const AppSource& source)
     endInsertRows();
 }
 
+void AppSourcesTableModel::update(const AppSource& source)
+{
+    for (int i = 0; i != sources.size(); ++i) {
+        auto& dstSource = sources[i];
+        if (dstSource.path == source.path) {
+            dstSource.type = source.type;
+            dstSource.status = source.status;
+            emit dataChanged(index(i, 0), index(i, 2));
+            return;
+        }
+    }
+}
+
 int AppSourcesTableModel::rowCount(const QModelIndex&) const
 {
     return sources.size();

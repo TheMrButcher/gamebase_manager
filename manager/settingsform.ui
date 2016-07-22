@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>505</width>
-    <height>415</height>
+    <height>422</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -184,16 +184,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="updateGamebaseSourcesButton">
-            <property name="statusTip">
-             <string>Обновляет состояние всех источников библиотеки</string>
-            </property>
-            <property name="text">
-             <string>Обновить</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
        </layout>
@@ -256,16 +246,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="updateAppSourcesButton">
-            <property name="statusTip">
-             <string>Обновляет состояние всех источников приложений</string>
-            </property>
-            <property name="text">
-             <string>Обновить</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
        </layout>
@@ -295,6 +275,13 @@
        </property>
        <property name="text">
         <string>Применить</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="updateButton">
+       <property name="text">
+        <string>Обновить</string>
        </property>
       </widget>
      </item>

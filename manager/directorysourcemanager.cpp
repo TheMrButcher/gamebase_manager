@@ -1,5 +1,7 @@
 #include "directorysourcemanager.h"
+#include "librarycopier.h"
 #include <QDir>
+#include <QThreadPool>
 
 DirectorySourceManager::DirectorySourceManager(const LibrarySource& source, QObject* parent)
     : LibrarySourceManager(parent)
@@ -28,5 +30,7 @@ void DirectorySourceManager::update()
 
 void DirectorySourceManager::download(const Library& library)
 {
-    emit finishedDownload(Library::makeAbsent(source));
+    auto copier = new LibraryCopier(library, library.afterAction(Library::Download));
+    connect(copier, SIGNAL(finishedCopy(Library)), this, SIGNAL(finishedDownload(Library)));
+    QThreadPool::globalInstance()->start(copier);
 }

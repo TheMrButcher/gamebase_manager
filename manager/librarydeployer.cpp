@@ -87,8 +87,10 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
         dstDir.cdUp();
     else
         return false;
-    if (!dstDir.rename(unzippedArchiveDirName, Files::DEPLOYED_ROOT_DIR_NAME))
-        return false;
+    if (unzippedArchiveDirName != Files::DEPLOYED_ROOT_DIR_NAME) {
+        if (!dstDir.rename(unzippedArchiveDirName, Files::DEPLOYED_ROOT_DIR_NAME))
+            return false;
+    }
     dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
 
     auto packageDir = dstDir;
@@ -114,6 +116,10 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
     resourcesDir.cd(Files::DESIGNS_DIR_NAME);
     copyDir(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
             contribBinPath);
+
+    contribDir.cd(Files::BIN_DIR_NAME);
+    QFile::copy(packageDir.absoluteFilePath("config.json"),
+                contribDir.absoluteFilePath(Files::APP_CONFIG_NAME));
     return true;
 }
 
@@ -134,7 +140,13 @@ bool LibraryDeployer::compileSources(QDir dir)
 bool LibraryDeployer::compileProject(QDir projectDir)
 {
     QFile::copy(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
+    auto result = compileProject(projectDir, COMPILATION_BATCH_NAME);
+    projectDir.remove(COMPILATION_BATCH_NAME);
+    return result;
+}
 
+bool LibraryDeployer::compileProject(QDir projectDir, QString scriptName)
+{
     QProcess cmdProcess;
     cmdProcess.setWorkingDirectory(projectDir.absolutePath());
     cmdProcess.setProcessChannelMode(QProcess::MergedChannels);
@@ -148,7 +160,7 @@ bool LibraryDeployer::compileProject(QDir projectDir)
     cmdProcess.setProcessEnvironment(env);
 
     QStringList arguments;
-    arguments << "/U" << "/C" << COMPILATION_BATCH_NAME;
+    arguments << "/U" << "/C" << scriptName;
     cmdProcess.start("cmd.exe", arguments);
     qDebug() << "Started process";
     if (!cmdProcess.waitForStarted(5000))

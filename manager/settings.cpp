@@ -81,6 +81,8 @@ bool Settings::read(QString fname)
 
     auto appSourcesArray = rootObj["appSources"].toArray();
     appSources.clear();
+    appSources.append(AppSource{
+        AppSource::WorkingDirectory, workingDir, SourceStatus::Unknown });
     foreach (auto sourceValue, appSourcesArray) {
         auto sourceObj = sourceValue.toObject();
         auto path = absPath(sourceObj["path"].toString());

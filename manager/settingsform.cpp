@@ -7,7 +7,7 @@
 #include <QFileDialog>
 
 namespace {
-const QString SETTINGS_FILE_NAME = "settings.json";
+const QString SETTINGS_FILE_NAME = "Settings.json";
 }
 
 SettingsForm::SettingsForm(MainWindow* parent) :
@@ -75,11 +75,19 @@ Settings SettingsForm::get() const
         LibrarySource::DownloadsDirectory, ui->downloadsDir->text(), SourceStatus::Unknown });
 
     result.appSources = appSourcesModel->get();
+    result.appSources.append(AppSource{
+        AppSource::WorkingDirectory, ui->workingDir->text(), SourceStatus::Unknown });
     result.vcVarsPath = ui->vcVarsPath->text();
     return result;
 }
 
 void SettingsForm::setAllUnknown()
+{
+    setAllLibrarySourcesUnknown();
+    setAllAppSourcesUnknown();
+}
+
+void SettingsForm::setAllLibrarySourcesUnknown()
 {
     foreach (auto source, librarySourcesModel->get()) {
         source.status = SourceStatus::Unknown;
@@ -87,9 +95,22 @@ void SettingsForm::setAllUnknown()
     }
 }
 
+void SettingsForm::setAllAppSourcesUnknown()
+{
+    foreach (auto source, appSourcesModel->get()) {
+        source.status = SourceStatus::Unknown;
+        updateAppSource(source);
+    }
+}
+
 void SettingsForm::updateLibrarySource(const LibrarySource& source)
 {
     librarySourcesModel->update(source);
+}
+
+void SettingsForm::updateAppSource(const AppSource& source)
+{
+    appSourcesModel->update(source);
 }
 
 void SettingsForm::on_acceptButton_clicked()
@@ -172,11 +193,6 @@ void SettingsForm::on_chooseWorkingDir_clicked()
     }
 }
 
-void SettingsForm::on_updateGamebaseSourcesButton_clicked()
-{
-    mainWindow->updateLibrarySources(get().librarySources);
-}
-
 void SettingsForm::on_chooseDownloadsDir_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке для загрузок");
@@ -192,4 +208,9 @@ void SettingsForm::on_chooseVCVarsPath_clicked()
     if (!path.isEmpty()) {
         ui->vcVarsPath->setText(path);
     }
+}
+
+void SettingsForm::on_updateButton_clicked()
+{
+    mainWindow->update(get());
 }

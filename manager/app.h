@@ -19,6 +19,13 @@ public:
     QString name;
     Version version;
     QString containerName;
+
+    bool validate();
+    bool exists() const;
+
+    static App fromFileSystem(const AppSource& source, QString containerName);
+    static App makeAbsent(const AppSource& source);
+    static App makeAbsent();
 };
 
 inline operator==(const App& app1, const App& app2)

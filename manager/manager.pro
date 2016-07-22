@@ -40,7 +40,11 @@ SOURCES += main.cpp\
     libraryremover.cpp \
     app.cpp \
     appstablemodel.cpp \
-    appsform.cpp
+    appsform.cpp \
+    librarycopier.cpp \
+    appsource.cpp \
+    appsourcemanager.cpp \
+    appsourcemanagerlist.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -66,7 +70,10 @@ HEADERS  += mainwindow.h \
     libraryremover.h \
     app.h \
     appstablemodel.h \
-    appsform.h
+    appsform.h \
+    librarycopier.h \
+    appsourcemanager.h \
+    appsourcemanagerlist.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

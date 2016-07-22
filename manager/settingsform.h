@@ -25,7 +25,10 @@ public:
     Settings get() const;
 
     void setAllUnknown();
+    void setAllLibrarySourcesUnknown();
+    void setAllAppSourcesUnknown();
     void updateLibrarySource(const LibrarySource& source);
+    void updateAppSource(const AppSource& source);
 
 private slots:
     void on_acceptButton_clicked();
@@ -48,11 +51,11 @@ private slots:
 
     void on_chooseWorkingDir_clicked();
 
-    void on_updateGamebaseSourcesButton_clicked();
-
     void on_chooseDownloadsDir_clicked();
 
     void on_chooseVCVarsPath_clicked();
+
+    void on_updateButton_clicked();
 
 private:
     Ui::SettingsForm *ui;

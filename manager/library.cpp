@@ -102,7 +102,7 @@ bool Library::checkAbility(Library::Ability ability) const
     case Remove: return source.type != LibrarySource::Server
                 && state != Absent;
     case Download: return source.type != LibrarySource::DownloadsDirectory
-                && state != Absent;
+                && state != Absent && state != Deployed;
     case Compile: return source.type != LibrarySource::Server
                 && state == SourceCode;
     case Deploy: return source.type == LibrarySource::DownloadsDirectory
