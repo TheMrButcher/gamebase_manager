@@ -51,3 +51,26 @@ bool Files::writeTextFile(QString data, QString dstPath, bool withBOM)
     stream << data;
     return true;
 }
+
+void Files::copyDir(QString srcPath, QString dstPath)
+{
+    QDir srcDir(srcPath);
+    QDir dstDir(dstPath);
+    copyDir(srcDir, dstDir);
+}
+
+void Files::copyDir(QDir srcDir, QDir dstDir)
+{
+    auto entries = srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (const auto& entry, entries) {
+        auto name = entry.fileName();
+        auto srcFilePath = srcDir.absoluteFilePath(name);
+        auto dstFilePath = dstDir.absoluteFilePath(name);
+        if (entry.isDir()) {
+            dstDir.mkdir(name);
+            copyDir(srcFilePath, dstFilePath);
+        } else {
+            QFile::copy(srcFilePath, dstFilePath);
+        }
+    }
+}

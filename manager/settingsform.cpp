@@ -61,7 +61,15 @@ void SettingsForm::set(const Settings& settings)
         }
     }
     librarySourcesModel->set(librarySources);
-    appSourcesModel->set(settings.appSources);
+
+    QList<AppSource> appSources;
+    appSources.reserve(settings.appSources.size());
+    foreach (const auto& source, settings.appSources) {
+        if (source.type == AppSource::Directory)
+            appSources.append(source);
+    }
+    appSourcesModel->set(appSources);
+
     ui->vcVarsPath->setText(settings.vcVarsPath);
 }
 

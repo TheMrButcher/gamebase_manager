@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "files.h"
 #include "mainwindow.h"
+#include "appsourcemanagerlist.h"
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
@@ -24,6 +25,10 @@ AppsForm::AppsForm(MainWindow *parent) :
     ui->appsTable->setColumnWidth(4, 50);
 
     connect(ui->updateButton, SIGNAL(clicked()), parent, SLOT(updateAppSources()));
+    connect(ui->appsTable->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+            this, SLOT(onAppsSelectionChanged(QItemSelection,QItemSelection)));
+    connect(AppSourceManagerList::instance(), SIGNAL(finishedAdd(App)),
+            this, SLOT(onAppAdded(App)));
 }
 
 AppsForm::~AppsForm()
@@ -41,6 +46,18 @@ void AppsForm::append(const QList<App>& apps)
 {
     foreach (const auto& app, apps)
         appsModel->append(app);
+}
+
+void AppsForm::onAppAdded(App app)
+{
+    if (!app.validate())
+        return;
+    appsModel->append(app);
+}
+
+void AppsForm::onAppsSelectionChanged(const QItemSelection&, const QItemSelection&)
+{
+    updateButtons();
 }
 
 void AppsForm::on_createButton_clicked()
@@ -65,20 +82,8 @@ void AppsForm::on_createButton_clicked()
     if (name.isEmpty() || !ok)
         return;
 
-    bool success = false;
-    QString containerName;
-    if (dir.exists(name)) {
-        for (int i = 2; i < 10; ++i) {
-            containerName = name + QString::number(i);
-            if (!dir.exists(containerName)) {
-                success = dir.mkdir(containerName);
-                break;
-            }
-        }
-    } else {
-        containerName = name;
-        success = dir.mkdir(containerName);
-    }
+    QString containerName = App::makeContainerName(dir, name);
+    bool success = !containerName.isEmpty() && dir.mkdir(containerName);
 
     if (!success) {
         QMessageBox::warning(this, "Ошибка при создании приложения",
@@ -108,4 +113,88 @@ void AppsForm::on_createButton_clicked()
                         dstDir.absoluteFilePath(name + ".vcxproj.user"), true);
     appsModel->append(App{ AppSource{ AppSource::WorkingDirectory, workingDir.path, SourceStatus::OK },
                            App::NotConfigured, name, Version{}, containerName });
+}
+
+int AppsForm::selectedRow() const
+{
+    auto rows = ui->appsTable->selectionModel()->selectedRows();
+    if (rows.empty())
+        return -1;
+    return rows[0].row();
+}
+
+void AppsForm::updateButtons()
+{
+    int row = selectedRow();
+    if (row == -1) {
+        ui->configureButton->setEnabled(false);
+        ui->removeButton->setEnabled(false);
+        ui->compressButton->setEnabled(false);
+        ui->addButton->setEnabled(false);
+        ui->deployButton->setEnabled(false);
+    } else {
+        const auto& app = appsModel->get()[row];
+        ui->configureButton->setEnabled(app.checkAbility(App::Configure));
+        ui->removeButton->setEnabled(app.checkAbility(App::Remove));
+        ui->compressButton->setEnabled(app.checkAbility(App::Compress));
+        ui->addButton->setEnabled(app.checkAbility(App::Add));
+        ui->deployButton->setEnabled(app.checkAbility(App::Deploy));
+    }
+}
+
+void AppsForm::on_configureButton_clicked()
+{
+
+}
+
+void AppsForm::on_removeButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
+
+    if (!app.validate())
+        return;
+
+    appsModel->removeRow(row);
+    app.removeConfig();
+    QDir dir(app.source.path);
+    if (dir.cd(app.containerName)) {
+        dir.removeRecursively();
+    } else {
+        dir.remove(app.containerName);
+    }
+}
+
+void AppsForm::on_compressButton_clicked()
+{
+
+}
+
+void AppsForm::on_addButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
+
+    auto workingDir = Settings::instance().workingDir();
+    if (workingDir.check() != SourceStatus::OK) {
+        auto answer = QMessageBox::question(this, "Создание рабочей папки",
+                                            "Рабочая папка отсутствует. Создать?");
+        if (answer != QMessageBox::Yes)
+            return;
+        QDir dir;
+        dir.mkpath(workingDir.path);
+        if (workingDir.check() != SourceStatus::OK)
+            return;
+    }
+
+    AppSourceManagerList::instance()->addToWorkingDir(app);
+}
+
+void AppsForm::on_deployButton_clicked()
+{
+
 }

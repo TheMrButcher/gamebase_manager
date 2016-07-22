@@ -15,9 +15,11 @@ public:
     AppSourceManager(const AppSource& source, QWidget* parent);
 
     void update();
+    void addToWorkingDir(App app);
 
 signals:
     void finishedUpdate(AppSource source, const QList<App>& apps);
+    void finishedAdd(App app);
 
 private:
     AppSource source;

@@ -3,6 +3,7 @@
 
 #include "appsource.h"
 #include "version.h"
+#include <QDir>
 
 class App
 {
@@ -20,12 +21,26 @@ public:
     Version version;
     QString containerName;
 
+    enum Ability {
+        Configure,
+        Remove,
+        Compress,
+        Add,
+        Deploy
+    };
+
     bool validate();
+    bool checkAbility(Ability ability) const;
+    App afterAction(Ability ability) const;
     bool exists() const;
+    bool copyConfig();
+    void removeConfig();
+    bool updateMainCpp();
 
     static App fromFileSystem(const AppSource& source, QString containerName);
     static App makeAbsent(const AppSource& source);
     static App makeAbsent();
+    static QString makeContainerName(QDir dir, QString baseName);
 };
 
 inline operator==(const App& app1, const App& app2)

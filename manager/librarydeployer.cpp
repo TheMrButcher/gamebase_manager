@@ -12,24 +12,6 @@
 
 namespace {
 const QString COMPILATION_BATCH_NAME = "compile.bat";
-
-void copyDir(QString srcPath, QString dstPath)
-{
-    QDir srcDir(srcPath);
-    QDir dstDir(dstPath);
-    auto entries = srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-    foreach (const auto& entry, entries) {
-        auto name = entry.fileName();
-        auto srcFilePath = srcDir.absoluteFilePath(name);
-        auto dstFilePath = dstDir.absoluteFilePath(name);
-        if (entry.isDir()) {
-            dstDir.mkdir(name);
-            copyDir(srcFilePath, dstFilePath);
-        } else {
-            QFile::copy(srcFilePath, dstFilePath);
-        }
-    }
-}
 }
 
 LibraryDeployer::LibraryDeployer(const Library& library)
@@ -114,8 +96,8 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
                 resourcesDir.absoluteFilePath(Files::FONTS_DIR_NAME));
 
     resourcesDir.cd(Files::DESIGNS_DIR_NAME);
-    copyDir(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
-            contribBinPath);
+    Files::copyDir(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
+                   contribBinPath);
 
     contribDir.cd(Files::BIN_DIR_NAME);
     QFile::copy(packageDir.absoluteFilePath("config.json"),

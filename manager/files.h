@@ -37,6 +37,8 @@ public:
     static bool existsDir(const QDir& dir, QString fname);
     static bool copyTextFile(QString srcPath, QString dstPath, bool withBOM = false);
     static bool writeTextFile(QString data, QString dstPath, bool withBOM = false);
+    static void copyDir(QString srcPath, QString dstPath);
+    static void copyDir(QDir srcDir, QDir dstDir);
 };
 
 #endif // FILES_H

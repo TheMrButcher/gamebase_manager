@@ -1,4 +1,6 @@
 #include "appsourcemanager.h"
+#include "settings.h"
+#include "files.h"
 #include <QWidget>
 #include <QDir>
 
@@ -27,4 +29,52 @@ void AppSourceManager::update()
         apps.append(app);
     }
     emit finishedUpdate(source, apps);
+}
+
+void AppSourceManager::addToWorkingDir(App app)
+{
+    auto workingDir = Settings::instance().workingDir();
+    auto resultApp = app.afterAction(App::Add);
+    if (workingDir.check() != SourceStatus::OK) {
+        emit finishedAdd(resultApp);
+        return;
+    }
+
+    if (app.source.check() != SourceStatus::OK) {
+        emit finishedAdd(resultApp);
+        return;
+    }
+
+    QDir srcDir(app.source.path);
+    if (!srcDir.exists(app.containerName)) {
+        emit finishedAdd(resultApp);
+        return;
+    }
+
+    QDir dstDir(workingDir.path);
+    if (resultApp.containerName.isEmpty() || dstDir.exists(resultApp.containerName)) {
+        emit finishedAdd(resultApp);
+        return;
+    }
+
+    if (app.state == App::NotConfigured || app.state == App::Full) {
+        if (!srcDir.cd(app.containerName)) {
+            emit finishedAdd(resultApp);
+            return;
+        }
+
+        if (!dstDir.mkdir(resultApp.containerName)) {
+            emit finishedAdd(resultApp);
+            return;
+        }
+        dstDir.cd(resultApp.containerName);
+        Files::copyDir(srcDir, dstDir);
+
+        if (dstDir.exists(Files::APP_CONFIG_NAME)) {
+            resultApp.copyConfig();
+            resultApp.updateMainCpp();
+        }
+    }
+
+    emit finishedAdd(resultApp);
 }

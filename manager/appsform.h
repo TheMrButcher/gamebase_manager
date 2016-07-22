@@ -9,6 +9,7 @@ class AppsForm;
 }
 
 class MainWindow;
+class QItemSelection;
 
 class AppsForm : public QWidget
 {
@@ -22,9 +23,26 @@ public:
     void append(const QList<App>& apps);
 
 private slots:
+    void onAppAdded(App app);
+
+    void onAppsSelectionChanged(const QItemSelection &, const QItemSelection &);
+
     void on_createButton_clicked();
 
+    void on_configureButton_clicked();
+
+    void on_removeButton_clicked();
+
+    void on_compressButton_clicked();
+
+    void on_addButton_clicked();
+
+    void on_deployButton_clicked();
+
 private:
+    int selectedRow() const;
+    void updateButtons();
+
     Ui::AppsForm *ui;
     AppsTableModel* appsModel;
 };

@@ -28,10 +28,22 @@ void AppSourceManagerList::update()
         manager->update();
 }
 
+void AppSourceManagerList::addToWorkingDir(const App& app)
+{
+    auto it = managers.find(app.source);
+    if (it == managers.end()) {
+        emit finishedAdd(app.afterAction(App::Add));
+        return;
+    }
+    it.value()->addToWorkingDir(app);
+}
+
 void AppSourceManagerList::insert(const AppSource& source)
 {
     auto manager = new AppSourceManager(source, parent);
     managers[source] = manager;
     connect(manager, SIGNAL(finishedUpdate(AppSource,QList<App>)),
             this, SIGNAL(finishedUpdate(AppSource,QList<App>)));
+    connect(manager, SIGNAL(finishedAdd(App)),
+            this, SIGNAL(finishedAdd(App)));
 }

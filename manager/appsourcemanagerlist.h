@@ -17,9 +17,11 @@ public:
 
     void set(const QList<AppSource>& sources);
     void update();
+    void addToWorkingDir(const App& app);
 
 signals:
     void finishedUpdate(AppSource source, const QList<App>& apps);
+    void finishedAdd(App app);
 
 private:
     void insert(const AppSource& source);
