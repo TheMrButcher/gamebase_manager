@@ -21,12 +21,12 @@ SettingsForm::SettingsForm(MainWindow* parent) :
     librarySourcesModel = new LibrarySourcesTableModel(this);
     ui->gamebaseSources->setModel(librarySourcesModel);
     ui->gamebaseSources->setColumnWidth(0, 50);
-    ui->gamebaseSources->setColumnWidth(1, 250);
+    ui->gamebaseSources->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     ui->gamebaseSources->setColumnWidth(2, 50);
 
     appSourcesModel = new AppSourcesTableModel(this);
     ui->appSources->setModel(appSourcesModel);
-    ui->appSources->setColumnWidth(0, 300);
+    ui->appSources->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->appSources->setColumnWidth(1, 50);
 
     if (!Settings::instance().read(SETTINGS_FILE_NAME)) {
@@ -149,8 +149,8 @@ void SettingsForm::on_addAppDirectoryButton_clicked()
 {
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке-источнику");
     if (!path.isEmpty()) {
-        appSourcesModel->append(
-                    AppSource{ path, SourceStatus::OK });
+        appSourcesModel->append(AppSource{
+            AppSource::Directory, path, SourceStatus::OK });
     }
 }
 

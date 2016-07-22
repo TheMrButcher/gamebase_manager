@@ -20,7 +20,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>2</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="mainTab">
          <attribute name="title">
@@ -39,6 +39,12 @@
           <string>Библиотеки</string>
          </attribute>
          <layout class="QGridLayout" name="librariesLayout"/>
+        </widget>
+        <widget class="QWidget" name="appsTab">
+         <attribute name="title">
+          <string>Приложения</string>
+         </attribute>
+         <layout class="QGridLayout" name="appsLayout"/>
         </widget>
        </widget>
       </item>

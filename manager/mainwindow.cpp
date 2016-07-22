@@ -32,6 +32,9 @@ MainWindow::MainWindow(QWidget *parent) :
     libraries = new LibrariesForm(this);
     ui->librariesLayout->addWidget(libraries);
 
+    apps = new AppsForm(this);
+    ui->appsLayout->addWidget(apps);
+
     librarySourceManagers->set(Settings::instance().librarySources);
     librarySourceManagers->fastUpdate();
 }

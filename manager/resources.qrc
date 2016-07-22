@@ -14,5 +14,6 @@
         <file>images/icons/Download.png</file>
         <file>images/icons/Empty.png</file>
         <file>scripts/compile.bat</file>
+        <file>images/icons/NotConfigured.png</file>
     </qresource>
 </RCC>

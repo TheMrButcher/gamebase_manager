@@ -5,6 +5,7 @@
 #include "aboutwindow.h"
 #include "settingsform.h"
 #include "librariesform.h"
+#include "appsform.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,6 +34,7 @@ private:
     AboutWindow* about;
     SettingsForm* settings;
     LibrariesForm* libraries;
+    AppsForm* apps;
 };
 
 #endif // MAINWINDOW_H

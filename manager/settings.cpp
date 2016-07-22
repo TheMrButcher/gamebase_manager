@@ -34,6 +34,12 @@ QString extractVCVarsPath()
         return QString();
     return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
 }
+
+QString absPath(QString path)
+{
+    QFileInfo file(QDir(), path);
+    return file.canonicalFilePath();
+}
 }
 
 bool Settings::read(QString fname)
@@ -49,8 +55,8 @@ bool Settings::read(QString fname)
         return false;
 
     auto rootObj = json.object();
-    auto workingDir = rootObj["workingDir"].toString(this->workingDir().path);
-    auto downloadsDir = rootObj["downloadsDir"].toString(this->downloadsDir().path);
+    auto workingDir = absPath(rootObj["workingDir"].toString(this->workingDir().path));
+    auto downloadsDir = absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
@@ -61,13 +67,15 @@ bool Settings::read(QString fname)
         LibrarySource::DownloadsDirectory, downloadsDir, SourceStatus::Unknown });
     foreach (auto sourceValue, librarySourcesArray) {
         auto sourceObj = sourceValue.toObject();
-        auto path = sourceObj["path"].toString();
-        if (path.isEmpty())
-            continue;
         LibrarySource::Type type = LibrarySource::Directory;
         auto typeStr = sourceObj["type"].toString("directory");
         if (typeStr == "server")
             type = LibrarySource::Server;
+        auto path = sourceObj["path"].toString();
+        if (path.isEmpty())
+            continue;
+        if (type != LibrarySource::Server)
+            path = absPath(path);
         librarySources.append(LibrarySource{ type, path, SourceStatus::Unknown });
     }
 
@@ -75,10 +83,12 @@ bool Settings::read(QString fname)
     appSources.clear();
     foreach (auto sourceValue, appSourcesArray) {
         auto sourceObj = sourceValue.toObject();
-        auto path = sourceObj["path"].toString();
+        auto path = absPath(sourceObj["path"].toString());
         if (path.isEmpty())
             continue;
-        appSources.append(AppSource{ path, SourceStatus::Unknown });
+        AppSource::Type type = path == workingDir
+            ? AppSource::WorkingDirectory : AppSource::Directory;
+        appSources.append(AppSource{ type, path, SourceStatus::Unknown });
     }
 
     return true;
@@ -90,15 +100,18 @@ void Settings::write(QString fname)
     if (!settingsFile.open(QIODevice::WriteOnly))
         return;
 
+    QDir dir;
+
     QJsonObject rootObj;
-    rootObj["workingDir"] = workingDir().path;
-    rootObj["downloadsDir"] = downloadsDir().path;
+    rootObj["workingDir"] = dir.relativeFilePath(workingDir().path);
+    rootObj["downloadsDir"] = dir.relativeFilePath(downloadsDir().path);
     rootObj["vcVarsPath"] = vcVarsPath;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
         QJsonObject sourceObj;
-        sourceObj["path"] = source.path;
+        sourceObj["path"] = source.type == LibrarySource::Server
+                ? source.path : dir.relativeFilePath(source.path);
         switch (source.type) {
         case LibrarySource::Server: sourceObj["type"] = "server"; break;
         case LibrarySource::Directory: sourceObj["type"] = "directory"; break;
@@ -111,7 +124,7 @@ void Settings::write(QString fname)
     QJsonArray appSourcesArray;
     foreach (auto source, appSources) {
         QJsonObject sourceObj;
-        sourceObj["path"] = source.path;
+        sourceObj["path"] = dir.relativeFilePath(source.path);
         appSourcesArray.append(sourceObj);
     }
     rootObj["appSources"] = appSourcesArray;

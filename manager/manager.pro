@@ -37,7 +37,10 @@ SOURCES += main.cpp\
     files.cpp \
     librarydeployer.cpp \
     archive.cpp \
-    libraryremover.cpp
+    libraryremover.cpp \
+    app.cpp \
+    appstablemodel.cpp \
+    appsform.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -60,12 +63,16 @@ HEADERS  += mainwindow.h \
     files.h \
     librarydeployer.h \
     archive.h \
-    libraryremover.h
+    libraryremover.h \
+    app.h \
+    appstablemodel.h \
+    appsform.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
     settingsform.ui \
-    librariesform.ui
+    librariesform.ui \
+    appsform.ui
 
 RESOURCES += \
     resources.qrc
