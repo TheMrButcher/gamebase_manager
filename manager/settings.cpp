@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "files.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
@@ -34,12 +35,6 @@ QString extractVCVarsPath()
         return QString();
     return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
 }
-
-QString absPath(QString path)
-{
-    QFileInfo file(QDir(), path);
-    return file.canonicalFilePath();
-}
 }
 
 bool Settings::read(QString fname)
@@ -55,8 +50,8 @@ bool Settings::read(QString fname)
         return false;
 
     auto rootObj = json.object();
-    auto workingDir = absPath(rootObj["workingDir"].toString(this->workingDir().path));
-    auto downloadsDir = absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
+    auto workingDir = Files::absPath(rootObj["workingDir"].toString(this->workingDir().path));
+    auto downloadsDir = Files::absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
@@ -75,7 +70,7 @@ bool Settings::read(QString fname)
         if (path.isEmpty())
             continue;
         if (type != LibrarySource::Server)
-            path = absPath(path);
+            path = Files::absPath(path);
         librarySources.append(LibrarySource{ type, path, SourceStatus::Unknown });
     }
 
@@ -85,7 +80,7 @@ bool Settings::read(QString fname)
         AppSource::WorkingDirectory, workingDir, SourceStatus::Unknown });
     foreach (auto sourceValue, appSourcesArray) {
         auto sourceObj = sourceValue.toObject();
-        auto path = absPath(sourceObj["path"].toString());
+        auto path = Files::absPath(sourceObj["path"].toString());
         if (path.isEmpty())
             continue;
         AppSource::Type type = path == workingDir

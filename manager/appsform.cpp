@@ -5,6 +5,7 @@
 #include "files.h"
 #include "mainwindow.h"
 #include "appsourcemanagerlist.h"
+#include "appconfigurationdialog.h"
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
@@ -17,6 +18,8 @@ AppsForm::AppsForm(MainWindow *parent) :
     ui->setupUi(this);
 
     appsModel = new AppsTableModel(this);
+    configDialog = new AppConfigurationDialog(this);
+    configDialog->hide();
     ui->appsTable->setModel(appsModel);
     ui->appsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->appsTable->setColumnWidth(1, 150);
@@ -29,6 +32,9 @@ AppsForm::AppsForm(MainWindow *parent) :
             this, SLOT(onAppsSelectionChanged(QItemSelection,QItemSelection)));
     connect(AppSourceManagerList::instance(), SIGNAL(finishedAdd(App)),
             this, SLOT(onAppAdded(App)));
+
+    connect(configDialog, SIGNAL(appUpdated(App)), this, SLOT(onAppUpdate(App)));
+    connect(configDialog, SIGNAL(appRenamed(App,App)), this, SLOT(onAppRename(App,App)));
 }
 
 AppsForm::~AppsForm()
@@ -50,9 +56,23 @@ void AppsForm::append(const QList<App>& apps)
 
 void AppsForm::onAppAdded(App app)
 {
-    if (!app.validate())
+    if (!app.exists())
         return;
+    app.configurate();
+    app.validate();
     appsModel->append(app);
+}
+
+void AppsForm::onAppUpdate(App app)
+{
+    App newApp = app;
+    newApp.validate();
+    appsModel->replace(app.source, app.containerName, newApp);
+}
+
+void AppsForm::onAppRename(App oldApp, App newApp)
+{
+    appsModel->replace(oldApp.source, oldApp.containerName, newApp);
 }
 
 void AppsForm::onAppsSelectionChanged(const QItemSelection&, const QItemSelection&)
@@ -99,11 +119,7 @@ void AppsForm::on_createButton_clicked()
     Files::copyTextFile(pkgDir.absoluteFilePath("main.cpp"),
                         dstDir.absoluteFilePath("main.cpp"));
 
-    QFile srcSolution(pkgDir.absoluteFilePath("project_template.sln"));
-    srcSolution.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString solutionData = QString::fromUtf8(srcSolution.readAll());
-    solutionData.replace("project_template", name);
-    Files::writeTextFile(solutionData, dstDir.absoluteFilePath(name + ".sln"), true);
+    App::createSolution(dstDir, name);
 
     Files::copyTextFile(pkgDir.absoluteFilePath("project_template.vcxproj"),
                         dstDir.absoluteFilePath(name + ".vcxproj"), true);
@@ -111,8 +127,11 @@ void AppsForm::on_createButton_clicked()
                         dstDir.absoluteFilePath(name + ".vcxproj.filters"), true);
     Files::copyTextFile(pkgDir.absoluteFilePath("project_template.vcxproj.user.template"),
                         dstDir.absoluteFilePath(name + ".vcxproj.user"), true);
-    appsModel->append(App{ AppSource{ AppSource::WorkingDirectory, workingDir.path, SourceStatus::OK },
-                           App::NotConfigured, name, Version{}, containerName });
+    App app{ AppSource{ AppSource::WorkingDirectory, workingDir.path, SourceStatus::OK },
+                           App::NotConfigured, name, Version{}, containerName };
+    app.configurate();
+    app.validate();
+    appsModel->append(app);
 }
 
 int AppsForm::selectedRow() const
@@ -144,7 +163,16 @@ void AppsForm::updateButtons()
 
 void AppsForm::on_configureButton_clicked()
 {
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
 
+    if (!app.validate())
+        return;
+
+    configDialog->setApp(app);
+    configDialog->show();
 }
 
 void AppsForm::on_removeButton_clicked()

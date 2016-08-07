@@ -69,11 +69,6 @@ void AppSourceManager::addToWorkingDir(App app)
         }
         dstDir.cd(resultApp.containerName);
         Files::copyDir(srcDir, dstDir);
-
-        if (dstDir.exists(Files::APP_CONFIG_NAME)) {
-            resultApp.copyConfig();
-            resultApp.updateMainCpp();
-        }
     }
 
     emit finishedAdd(resultApp);

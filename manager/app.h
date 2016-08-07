@@ -2,6 +2,7 @@
 #define APP_H
 
 #include "appsource.h"
+#include "appconfig.h"
 #include "version.h"
 #include <QDir>
 
@@ -33,14 +34,20 @@ public:
     bool checkAbility(Ability ability) const;
     App afterAction(Ability ability) const;
     bool exists() const;
+    bool exists(QString fileName) const;
     bool copyConfig();
+    AppConfig config();
+    bool setConfig(const AppConfig& config);
     void removeConfig();
     bool updateMainCpp();
+    bool isMainCppOK();
+    bool configurate();
 
     static App fromFileSystem(const AppSource& source, QString containerName);
     static App makeAbsent(const AppSource& source);
     static App makeAbsent();
     static QString makeContainerName(QDir dir, QString baseName);
+    static bool createSolution(QDir dir, QString name);
 };
 
 inline operator==(const App& app1, const App& app2)

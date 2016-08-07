@@ -15,7 +15,8 @@ public:
     const QList<App>& get() const;
     void set(const QList<App>& apps);
     void append(const App& app);
-    void replace(const App& appOld, const App& appNew);
+    void replace(const App& oldApp, const App& newApp);
+    void replace(const AppSource& source, QString containerName, const App& appNew);
 
     // QAbstractItemModel interface
 public:

@@ -1,6 +1,7 @@
 #include "app.h"
 #include "settings.h"
 #include "files.h"
+#include "appconfig.h"
 #include <QHash>
 #include <QDir>
 #include <QFile>
@@ -14,7 +15,8 @@
 namespace {
 
 const QString SET_CONFIG_PREFIX = "app.setConfig(\"";
-const QString SET_CONFIG_SUFFIX = "\")";
+const QString SET_CONFIG_SUFFIX = "\");";
+const QString DEFINE_APP_LINE = "MyApp app;";
 
 bool getDeployedConfigsDir(QDir& dir)
 {
@@ -30,10 +32,46 @@ bool getDeployedConfigsDir(QDir& dir)
     return true;
 }
 
-QString changeRootPath(QDir oldRoot, QDir newRoot, QString path)
+bool updateMainCppImpl(QDir dir, QString containerName, int fixIteration)
 {
-    QFileInfo file(oldRoot, path);
-    return newRoot.relativeFilePath(file.canonicalFilePath());
+    QFile srcFile(dir.absoluteFilePath("main.cpp"));
+    if (!srcFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    QFile dstFile(dir.absoluteFilePath("main.cpp_temp"));
+    if (!dstFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    bool found = false;
+    QTextStream inStream(&srcFile);
+    QTextStream outStream(&dstFile);
+    while (!inStream.atEnd()) {
+        auto line = inStream.readLine();
+        if (fixIteration == 0) {
+            int startIndex = line.indexOf(SET_CONFIG_PREFIX);
+            if (startIndex != -1) {
+                int endIndex = line.indexOf(SET_CONFIG_SUFFIX, startIndex + SET_CONFIG_PREFIX.length());
+                if (endIndex != -1) {
+                    found = true;
+                    line = line.mid(0, startIndex + SET_CONFIG_PREFIX.length())
+                            + containerName + Files::APP_CONFIG_NAME
+                            + line.mid(endIndex);
+                }
+            }
+        }
+        outStream << line << endl;
+        if (fixIteration == 1) {
+            int startIndex = line.indexOf(DEFINE_APP_LINE);
+            if (startIndex != -1) {
+                found = true;
+                QString newLine = line.mid(0, startIndex) +
+                        SET_CONFIG_PREFIX + containerName + Files::APP_CONFIG_NAME +
+                        SET_CONFIG_SUFFIX;
+                outStream << newLine << endl;
+            }
+        }
+    }
+    return found;
 }
 
 }
@@ -94,6 +132,14 @@ bool App::exists() const
     return state != Absent;
 }
 
+bool App::exists(QString fileName) const
+{
+    QDir dir(source.path);
+    if (!dir.cd(containerName))
+        return false;
+    return dir.exists(fileName);
+}
+
 bool App::copyConfig()
 {
     if (!checkAbility(Configure))
@@ -109,22 +155,30 @@ bool App::copyConfig()
     if (!getDeployedConfigsDir(dstDir))
         return false;
 
-    QFile srcFile(srcDir.absoluteFilePath(Files::APP_CONFIG_NAME));
-    if (!srcFile.open(QIODevice::ReadOnly))
+    AppConfig config;
+    if (!config.read(srcDir, srcDir.absoluteFilePath(Files::APP_CONFIG_NAME)))
         return false;
-    QJsonDocument json = QJsonDocument::fromJson(srcFile.readAll());
-    QJsonObject rootObj = json.object();
-    rootObj["shadersPath"] = changeRootPath(srcDir, dstDir, rootObj["shadersPath"].toString());
-    rootObj["imagesPath"] = changeRootPath(srcDir, dstDir, rootObj["imagesPath"].toString());
-    rootObj["fontsPath"] = changeRootPath(srcDir, dstDir, rootObj["fontsPath"].toString());
-    rootObj["designPath"] = changeRootPath(srcDir, dstDir, rootObj["designPath"].toString());
+    return config.write(dstDir, dstDir.absoluteFilePath(containerName + Files::APP_CONFIG_NAME));
+}
 
-    QFile dstFile(dstDir.absoluteFilePath(containerName + Files::APP_CONFIG_NAME));
-    if (!dstFile.open(QIODevice::WriteOnly | QIODevice::Text))
+AppConfig App::config()
+{
+    AppConfig config = AppConfig::defaultConfig();
+    QDir srcDir(source.path);
+    if (!srcDir.cd(containerName))
+        return config;
+    if (!srcDir.exists(Files::APP_CONFIG_NAME))
+        return config;
+    config.read(srcDir, srcDir.absoluteFilePath(Files::APP_CONFIG_NAME));
+    return config;
+}
+
+bool App::setConfig(const AppConfig& config)
+{
+    QDir dir(source.path);
+    if (!dir.cd(containerName))
         return false;
-    QTextStream stream(&dstFile);
-    stream << QString::fromUtf8(QJsonDocument(rootObj).toJson());
-    return true;
+    return config.write(dir, dir.absoluteFilePath(Files::APP_CONFIG_NAME));
 }
 
 void App::removeConfig()
@@ -144,38 +198,69 @@ bool App::updateMainCpp()
     QDir dir(source.path);
     dir.cd(containerName);
 
-    bool found = false;
-    {
-        QFile srcFile(dir.absoluteFilePath("main.cpp"));
-        if (!srcFile.open(QIODevice::ReadOnly | QIODevice::Text))
-            return false;
-
-        QFile dstFile(dir.absoluteFilePath("main.cpp_temp"));
-        if (!dstFile.open(QIODevice::WriteOnly | QIODevice::Text))
-            return false;
-
-        QTextStream inStream(&srcFile);
-        QTextStream outStream(&dstFile);
-        while (!inStream.atEnd()) {
-            auto line = inStream.readLine();
-            int startIndex = line.indexOf(SET_CONFIG_PREFIX);
-            if (startIndex != -1) {
-                int endIndex = line.indexOf(SET_CONFIG_SUFFIX, startIndex + SET_CONFIG_PREFIX.length());
-                if (endIndex != -1) {
-                    found = true;
-                    line = line.mid(0, startIndex + SET_CONFIG_PREFIX.length())
-                            + containerName + Files::APP_CONFIG_NAME
-                            + line.mid(endIndex);
-                }
-            }
-            outStream << line << endl;
-        }
-    }
+    bool found = updateMainCppImpl(dir, containerName, 0);
+    if (!found)
+        found = updateMainCppImpl(dir, containerName, 1);
 
     dir.remove("main.cpp");
     dir.rename("main.cpp_temp", "main.cpp");
 
     return found;
+}
+
+bool App::isMainCppOK()
+{
+    if (!checkAbility(Configure))
+        return false;
+    if (source.check() != SourceStatus::OK)
+        return false;
+    QDir dir(source.path);
+    dir.cd(containerName);
+
+    QFile srcFile(dir.absoluteFilePath("main.cpp"));
+    if (!srcFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    QTextStream inStream(&srcFile);
+    while (!inStream.atEnd()) {
+        auto line = inStream.readLine();
+        int startIndex = line.indexOf(SET_CONFIG_PREFIX);
+        if (startIndex != -1) {
+            int endIndex = line.indexOf(SET_CONFIG_SUFFIX, startIndex + SET_CONFIG_PREFIX.length());
+            if (endIndex != -1)
+                return true;
+        }
+    }
+    return false;
+}
+
+bool App::configurate()
+{
+    QDir dir(source.path);
+    if (!dir.cd(containerName))
+        return false;
+
+    bool isAllOK = true;
+    if (!setConfig(config()))
+        isAllOK = false;
+    if (!copyConfig())
+        isAllOK = false;
+    if (version.empty()) {
+        if (!version.read(dir.absoluteFilePath("VERSION.txt")))
+            version = Version::fromString("1.0.0");
+    }
+    if (!version.write(dir.absoluteFilePath("VERSION.txt")))
+        isAllOK = false;
+    if (!updateMainCpp())
+        isAllOK = false;
+    if (!dir.exists("ManagerProject.json")) {
+        QFile projFile(dir.absoluteFilePath("ManagerProject.json"));
+        if (projFile.open(QIODevice::WriteOnly))
+            projFile.write("{}");
+        else
+            isAllOK = false;
+    }
+    return isAllOK;
 }
 
 App App::fromFileSystem(const AppSource& source, QString containerName)
@@ -241,4 +326,22 @@ QString App::makeContainerName(QDir dir, QString baseName)
         return baseName;
     }
     return QString();
+}
+
+bool App::createSolution(QDir dir, QString name)
+{
+    QDir pkgDir(Settings::instance().workingDir().path);
+    if (!pkgDir.cd(Files::DEPLOYED_ROOT_DIR_NAME)
+        || !pkgDir.cd(Files::PACKAGE_DIR_NAME)
+        || !pkgDir.cd("project_template"))
+        return false;
+
+    QFile srcSolution(pkgDir.absoluteFilePath("project_template.sln"));
+    if (!srcSolution.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    QString solutionData = QString::fromUtf8(srcSolution.readAll());
+    solutionData.replace("project_template", name);
+    if (!Files::writeTextFile(solutionData, dir.absoluteFilePath(name + ".sln"), true))
+        return false;
+    return true;
 }

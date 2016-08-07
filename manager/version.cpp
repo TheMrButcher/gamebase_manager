@@ -15,12 +15,20 @@ void Version::set(QString versionStr)
 bool Version::read(QString fileName)
 {
     QFile versionFile(fileName);
-    if (!versionFile.exists())
+    if (!versionFile.open(QIODevice::ReadOnly))
         return false;
-    versionFile.open(QIODevice::ReadOnly);
     QTextStream stream(&versionFile);
     auto versionStr = stream.readAll();
     set(versionStr);
+    return true;
+}
+
+bool Version::write(QString fileName)
+{
+    QFile versionFile(fileName);
+    if (!versionFile.open(QIODevice::WriteOnly))
+        return false;
+    versionFile.write(toString().toUtf8());
     return true;
 }
 

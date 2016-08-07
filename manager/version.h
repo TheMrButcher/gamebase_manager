@@ -10,6 +10,7 @@ public:
 
     void set(QString versionStr);
     bool read(QString fileName);
+    bool write(QString fileName);
     bool empty() const { return version.empty(); }
 
     static Version fromString(QString versionStr);

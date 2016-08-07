@@ -10,6 +10,7 @@ class AppsForm;
 
 class MainWindow;
 class QItemSelection;
+class AppConfigurationDialog;
 
 class AppsForm : public QWidget
 {
@@ -24,6 +25,8 @@ public:
 
 private slots:
     void onAppAdded(App app);
+    void onAppUpdate(App app);
+    void onAppRename(App oldApp, App newApp);
 
     void onAppsSelectionChanged(const QItemSelection &, const QItemSelection &);
 
@@ -45,6 +48,7 @@ private:
 
     Ui::AppsForm *ui;
     AppsTableModel* appsModel;
+    AppConfigurationDialog* configDialog;
 };
 
 #endif // APPSFORM_H

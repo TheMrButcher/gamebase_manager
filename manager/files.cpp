@@ -74,3 +74,14 @@ void Files::copyDir(QDir srcDir, QDir dstDir)
         }
     }
 }
+
+QString Files::absPath(QString path)
+{
+    return absPath(QDir(), path);
+}
+
+QString Files::absPath(QDir dir, QString path)
+{
+    QFileInfo file(dir, path);
+    return file.canonicalFilePath();
+}

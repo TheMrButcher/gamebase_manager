@@ -44,7 +44,9 @@ SOURCES += main.cpp\
     librarycopier.cpp \
     appsource.cpp \
     appsourcemanager.cpp \
-    appsourcemanagerlist.cpp
+    appsourcemanagerlist.cpp \
+    appconfigurationdialog.cpp \
+    appconfig.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -73,13 +75,16 @@ HEADERS  += mainwindow.h \
     appsform.h \
     librarycopier.h \
     appsourcemanager.h \
-    appsourcemanagerlist.h
+    appsourcemanagerlist.h \
+    appconfigurationdialog.h \
+    appconfig.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
     settingsform.ui \
     librariesform.ui \
-    appsform.ui
+    appsform.ui \
+    appconfigurationdialog.ui
 
 RESOURCES += \
     resources.qrc

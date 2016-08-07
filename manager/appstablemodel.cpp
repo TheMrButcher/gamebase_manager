@@ -50,12 +50,24 @@ void AppsTableModel::append(const App& app)
     }
 }
 
-void AppsTableModel::replace(const App& appOld, const App& appNew)
+void AppsTableModel::replace(const App& oldApp, const App& newApp)
 {
     int i = 0;
     foreach (const auto& appInTable, apps) {
-        if (appInTable == appOld) {
-            apps[i] = appNew;
+        if (appInTable == oldApp) {
+            apps[i] = newApp;
+            emit dataChanged(index(i, 0), index(i, 4));
+        }
+        ++i;
+    }
+}
+
+void AppsTableModel::replace(const AppSource& source, QString containerName, const App& newApp)
+{
+    int i = 0;
+    foreach (const auto& appInTable, apps) {
+        if (appInTable.source == source && appInTable.containerName == containerName) {
+            apps[i] = newApp;
             emit dataChanged(index(i, 0), index(i, 4));
         }
         ++i;

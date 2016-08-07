@@ -39,6 +39,8 @@ public:
     static bool writeTextFile(QString data, QString dstPath, bool withBOM = false);
     static void copyDir(QString srcPath, QString dstPath);
     static void copyDir(QDir srcDir, QDir dstDir);
+    static QString absPath(QString path);
+    static QString absPath(QDir dir, QString path);
 };
 
 #endif // FILES_H
