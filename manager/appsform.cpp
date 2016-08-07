@@ -10,6 +10,8 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QUrl>
+#include <QDesktopServices>
 
 AppsForm::AppsForm(MainWindow *parent) :
     QWidget(parent),
@@ -151,6 +153,8 @@ void AppsForm::updateButtons()
         ui->compressButton->setEnabled(false);
         ui->addButton->setEnabled(false);
         ui->deployButton->setEnabled(false);
+        ui->openSolutionButton->setEnabled(false);
+        ui->openDirButton->setEnabled(false);
     } else {
         const auto& app = appsModel->get()[row];
         ui->configureButton->setEnabled(app.checkAbility(App::Configure));
@@ -158,6 +162,8 @@ void AppsForm::updateButtons()
         ui->compressButton->setEnabled(app.checkAbility(App::Compress));
         ui->addButton->setEnabled(app.checkAbility(App::Add));
         ui->deployButton->setEnabled(app.checkAbility(App::Deploy));
+        ui->openSolutionButton->setEnabled(app.checkAbility(App::OpenSolution));
+        ui->openDirButton->setEnabled(app.checkAbility(App::OpenDirectory));
     }
 }
 
@@ -225,4 +231,34 @@ void AppsForm::on_addButton_clicked()
 void AppsForm::on_deployButton_clicked()
 {
 
+}
+
+void AppsForm::on_openSolutionButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
+
+    QDir dir(app.source.path);
+    if (!dir.cd(app.containerName))
+        return;
+    QString solutionPath = dir.absoluteFilePath(app.name + ".sln");
+    QDesktopServices::openUrl(QUrl::fromLocalFile(solutionPath));
+}
+
+void AppsForm::on_openDirButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
+
+    QString path = app.source.path;
+    if (app.state == App::NotConfigured || app.state == App::Full) {
+        QDir dir(app.source.path);
+        path = dir.absoluteFilePath(app.containerName);
+    }
+
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 }

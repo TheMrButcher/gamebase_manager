@@ -27,7 +27,9 @@ public:
         Remove,
         Compress,
         Add,
-        Deploy
+        Deploy,
+        OpenSolution,
+        OpenDirectory
     };
 
     bool validate();

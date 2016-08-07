@@ -102,6 +102,8 @@ bool App::checkAbility(App::Ability ability) const
                 && source.type != AppSource::WorkingDirectory;
     case Deploy: return state == Full
                 && source.type == AppSource::WorkingDirectory;
+    case OpenSolution: return state == NotConfigured || state == Full;
+    case OpenDirectory: return state != Absent;
     default: break;
     }
     return false;

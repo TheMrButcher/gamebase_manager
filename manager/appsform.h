@@ -42,6 +42,10 @@ private slots:
 
     void on_deployButton_clicked();
 
+    void on_openSolutionButton_clicked();
+
+    void on_openDirButton_clicked();
+
 private:
     int selectedRow() const;
     void updateButtons();

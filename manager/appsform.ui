@@ -62,6 +62,26 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="openSolutionButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Открыть в MS Visual Studio</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="openDirButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Открыть папку</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="removeButton">
           <property name="enabled">
            <bool>false</bool>
@@ -87,7 +107,7 @@
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>Добавить</string>
+           <string>Добавить в рабочую папку</string>
           </property>
          </widget>
         </item>
