@@ -1,11 +1,18 @@
 #include "libraryremover.h"
 #include "files.h"
+#include "filesmanager.h"
+#include "progressmanager.h"
 #include <QWidget>
 #include <QDir>
 
 LibraryRemover::LibraryRemover(const Library& library)
     : library(library)
-{}
+{
+    ProgressManager::instance()->show("Удаление библиотеки...", "Подготавливается список файлов...",
+                                      "Удалено файлов");
+    manager = new FilesManager(this);
+    manager->setRootDirectory(library.source.path);
+}
 
 void LibraryRemover::run()
 {
@@ -13,29 +20,20 @@ void LibraryRemover::run()
     case Library::BinaryArchive:
     case Library::SourceCode:
     {
-        QDir dir(library.source.path);
-        if (!dir.cd(library.archiveName))
-            return emitFinish();
-        dir.removeRecursively();
+        manager->remove(library.archiveName);
         break;
     }
 
     case Library::Deployed:
     {
-        QDir dir(library.source.path);
-        dir.remove(Files::EDITOR_LINK_NAME);
-        if (dir.exists(Files::DEPLOYED_ROOT_DIR_NAME)) {
-            if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
-                return emitFinish();
-            dir.removeRecursively();
-        } else {
-            dir.remove(Files::DEPLOYED_ROOT_DIR_NAME);
-        }
+        manager->remove(Files::EDITOR_LINK_NAME);
+        manager->remove(Files::DEPLOYED_ROOT_DIR_NAME);
         break;
     }
 
     default: break;
     }
+    manager->run();
     return emitFinish();
 }
 

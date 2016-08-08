@@ -5,6 +5,9 @@
 #include <QRunnable>
 #include <QObject>
 
+class QProgressDialog;
+class FilesManager;
+
 class LibraryRemover : public QObject, public QRunnable
 {
     Q_OBJECT
@@ -23,6 +26,7 @@ private:
     void emitFinish();
 
     Library library;
+    FilesManager* manager;
 };
 
 #endif // LIBRARYREMOVER_H

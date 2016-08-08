@@ -3,10 +3,12 @@
 #include "settings.h"
 #include "librarysourcemanagerlist.h"
 #include "appsourcemanagerlist.h"
+#include "progressmanager.h"
 
 namespace {
 LibrarySourceManagerList* librarySourceManagers;
 AppSourceManagerList* appSourceManagers;
+ProgressManager* progressManager;
 }
 
 LibrarySourceManagerList* LibrarySourceManagerList::instance()
@@ -17,6 +19,11 @@ LibrarySourceManagerList* LibrarySourceManagerList::instance()
 AppSourceManagerList* AppSourceManagerList::instance()
 {
     return appSourceManagers;
+}
+
+ProgressManager* ProgressManager::instance()
+{
+    return progressManager;
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -49,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent) :
     librarySourceManagers->fastUpdate();
     appSourceManagers->set(Settings::instance().appSources);
     appSourceManagers->update();
+
+    progressManager = new ProgressManager(this);
 }
 
 MainWindow::~MainWindow()

@@ -46,7 +46,9 @@ SOURCES += main.cpp\
     appsourcemanager.cpp \
     appsourcemanagerlist.cpp \
     appconfigurationdialog.cpp \
-    appconfig.cpp
+    appconfig.cpp \
+    filesmanager.cpp \
+    progressmanager.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -77,7 +79,9 @@ HEADERS  += mainwindow.h \
     appsourcemanager.h \
     appsourcemanagerlist.h \
     appconfigurationdialog.h \
-    appconfig.h
+    appconfig.h \
+    filesmanager.h \
+    progressmanager.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
