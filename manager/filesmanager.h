@@ -16,10 +16,18 @@ public:
     explicit FilesManager(QObject *parent = 0);
 
     void setRootDirectory(QString path);
+    void reset();
+    bool isCanceled() const;
+    bool isOK() const;
     void remove(QString path);
-    void run();
+    void unarchive(QString archivePath, QString dstPath);
+    void rename(QString srcPath, QString dstPath);
+    void copyFiles(QString srcPath, QString dstPath);
+    void copy(QString srcPath, QString dstPath);
+    bool run();
 
 signals:
+    void started();
     void stopped();
 
 private slots:
@@ -29,11 +37,18 @@ private slots:
 private:
     void removeDir(QString path);
     void removeFile(QString path);
+    void copyFiles(QDir srcDir, QDir dstDir);
 
     struct OpDesc {
         enum OpType {
             Remove,
-            RemoveDir
+            RemoveDir,
+            StartUnarchive,
+            Unarchive,
+            FinishUnarchive,
+            Rename,
+            Copy,
+            MakeDir
         };
 
         OpType type;
@@ -43,10 +58,11 @@ private:
 
     QDir rootDir;
     QList<OpDesc> ops;
-    int processedOps;
+    QAtomicInt processedOps;
     QAtomicInt startFlag;
     QAtomicInt cancelFlag;
     QTimer* timer;
+    bool ok;
 };
 
 #endif // FILESMANAGER_H

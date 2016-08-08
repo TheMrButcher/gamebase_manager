@@ -13,6 +13,7 @@ public:
     ProgressManager(QWidget* parent);
 
     static ProgressManager* instance();
+    static void invokeShow(QString title, QString labelAfterStart);
     static void invokeStart(int value);
     static void invokeSetProgress(int value);
 
@@ -20,7 +21,7 @@ signals:
     void canceled();
 
 public slots:
-    void show(QString title, QString labelBeforeStart, QString labelAfterStart);
+    void show(QString title, QString labelAfterStart);
     void start(int maxValue);
     void setProgress(int value);
 

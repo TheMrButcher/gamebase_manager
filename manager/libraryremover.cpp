@@ -8,8 +8,7 @@
 LibraryRemover::LibraryRemover(const Library& library)
     : library(library)
 {
-    ProgressManager::instance()->show("Удаление библиотеки...", "Подготавливается список файлов...",
-                                      "Удалено файлов");
+    ProgressManager::instance()->show("Удаление библиотеки...", "Удалено файлов");
     manager = new FilesManager(this);
     manager->setRootDirectory(library.source.path);
 }

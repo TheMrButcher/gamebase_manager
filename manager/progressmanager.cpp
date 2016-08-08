@@ -15,6 +15,12 @@ ProgressManager::ProgressManager(QWidget* parent)
     connect(progressDialog, SIGNAL(canceled()), this, SIGNAL(canceled()));
 }
 
+void ProgressManager::invokeShow(QString title, QString labelAfterStart)
+{
+    QMetaObject::invokeMethod(instance(), "show",
+                              Q_ARG(QString, title), Q_ARG(QString, labelAfterStart));
+}
+
 void ProgressManager::invokeStart(int value)
 {
     QMetaObject::invokeMethod(instance(), "start", Q_ARG(int, value));
@@ -25,12 +31,12 @@ void ProgressManager::invokeSetProgress(int value)
     QMetaObject::invokeMethod(instance(), "setProgress", Q_ARG(int, value));
 }
 
-void ProgressManager::show(QString title, QString labelBeforeStart, QString labelAfterStart)
+void ProgressManager::show(QString title, QString labelAfterStart)
 {
     progressDialog->setWindowTitle(title);
     progressDialog->setRange(0, 0);
     progressDialog->setValue(0);
-    progressDialog->setLabelText(labelBeforeStart);
+    progressDialog->setLabelText("Подготавливается список файлов...");
     progressDialog->show();
     this->labelAfterStart = labelAfterStart;
 }

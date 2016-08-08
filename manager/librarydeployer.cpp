@@ -2,6 +2,8 @@
 #include "settings.h"
 #include "files.h"
 #include "archive.h"
+#include "filesmanager.h"
+#include "progressmanager.h"
 #include <JlCompress.h>
 #include <QWidget>
 #include <QDir>
@@ -18,6 +20,8 @@ LibraryDeployer::LibraryDeployer(const Library& library)
     : library(library)
 {
     workingDir = Settings::instance().workingDir();
+    manager = new FilesManager(this);
+    manager->setRootDirectory(workingDir.path);
 }
 
 void LibraryDeployer::run()
@@ -30,7 +34,7 @@ void LibraryDeployer::run()
         return emitFinish();
 
     QDir dstDir(workingDir.path);
-    if (!unarchiveSources(srcDir, dstDir))
+    if (!unarchiveSources(srcDir))
         return emitFinish();
 
     dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
@@ -40,7 +44,11 @@ void LibraryDeployer::run()
 
     if (library.state == Library::BinaryArchive) {
         auto binariesArchivePath = srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME);
-        JlCompress::extractDir(binariesArchivePath, contribBinPath);
+        ProgressManager::invokeShow("Распаковка бинарного архива...", "Распаковано файлов");
+        manager->unarchive(binariesArchivePath, contribBinPath);
+        if (!manager->run())
+            return emitFinish();
+        manager->reset();
     } else {
         if (!compileSources(dstDir))
             return emitFinish();
@@ -54,21 +62,31 @@ void LibraryDeployer::run()
     emitFinish();
 }
 
-bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
+bool LibraryDeployer::unarchiveSources(QDir srcDir)
 {
     auto sourcesArchivePath = srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     auto unzippedArchiveDirName = Archive::rootName(sourcesArchivePath);
+
+    QDir dstDir(workingDir.path);
     if (dstDir.exists(unzippedArchiveDirName)) {
-        auto oldArchiveDir = dstDir;
-        oldArchiveDir.cd(unzippedArchiveDirName);
-        oldArchiveDir.removeRecursively();
+        ProgressManager::invokeShow("Удаление временных файлов...", "Удалено файлов");
+        manager->remove(unzippedArchiveDirName);
+        if (!manager->run())
+            return false;
+        manager->reset();
     }
-    JlCompress::extractDir(sourcesArchivePath, workingDir.path);
+
+    ProgressManager::invokeShow("Распакова корня пакета...", "Распаковано файлов");
+    manager->unarchive(sourcesArchivePath, ".");
+    if (!manager->run())
+        return false;
+    manager->reset();
 
     if (dstDir.cd(unzippedArchiveDirName))
         dstDir.cdUp();
     else
         return false;
+
     if (unzippedArchiveDirName != Files::DEPLOYED_ROOT_DIR_NAME) {
         if (!dstDir.rename(unzippedArchiveDirName, Files::DEPLOYED_ROOT_DIR_NAME))
             return false;
@@ -82,26 +100,27 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir, QDir dstDir)
     auto contribDir = dstDir;
     contribDir.cd(Files::CONTRIB_DIR_NAME);
     auto contribBinPath = contribDir.absoluteFilePath(Files::BIN_DIR_NAME);
-    JlCompress::extractDir(
-                packageDir.absoluteFilePath(Files::BIN_DIR_NAME + ".zip"),
-                contribBinPath);
-    JlCompress::extractDir(
-                packageDir.absoluteFilePath(Files::INCLUDE_DIR_NAME + ".zip"),
-                contribDir.absoluteFilePath(Files::INCLUDE_DIR_NAME));
 
+    ProgressManager::invokeShow("Распакова пакета...", "Распаковано файлов");
+    manager->unarchive(packageDir.absoluteFilePath(Files::BIN_DIR_NAME + ".zip"),
+                       contribBinPath);
+    manager->unarchive(packageDir.absoluteFilePath(Files::INCLUDE_DIR_NAME + ".zip"),
+                       contribDir.absoluteFilePath(Files::INCLUDE_DIR_NAME));
     auto resourcesDir = dstDir;
     resourcesDir.cd(Files::RESOURCES_DIR_NAME);
-    JlCompress::extractDir(
-                packageDir.absoluteFilePath(Files::FONTS_DIR_NAME + ".zip"),
-                resourcesDir.absoluteFilePath(Files::FONTS_DIR_NAME));
-
+    manager->unarchive(packageDir.absoluteFilePath(Files::FONTS_DIR_NAME + ".zip"),
+                       resourcesDir.absoluteFilePath(Files::FONTS_DIR_NAME));
     resourcesDir.cd(Files::DESIGNS_DIR_NAME);
-    Files::copyDir(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
-                   contribBinPath);
+    manager->copyFiles(resourcesDir.absoluteFilePath(Files::EDITOR_PROJECT_NAME),
+                       contribBinPath);
+    QDir contribBinDir(contribBinPath);
+    manager->copy(packageDir.absoluteFilePath("config.json"),
+                  contribBinDir.absoluteFilePath(Files::APP_CONFIG_NAME));
 
-    contribDir.cd(Files::BIN_DIR_NAME);
-    QFile::copy(packageDir.absoluteFilePath("config.json"),
-                contribDir.absoluteFilePath(Files::APP_CONFIG_NAME));
+    if (!manager->run())
+        return false;
+    manager->reset();
+
     return true;
 }
 
