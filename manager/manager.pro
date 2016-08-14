@@ -49,7 +49,8 @@ SOURCES += main.cpp\
     appconfig.cpp \
     filesmanager.cpp \
     progressmanager.cpp \
-    largefilemanager.cpp
+    largefilemanager.cpp \
+    newappdialog.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -83,14 +84,16 @@ HEADERS  += mainwindow.h \
     appconfig.h \
     filesmanager.h \
     progressmanager.h \
-    largefilemanager.h
+    largefilemanager.h \
+    newappdialog.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
     settingsform.ui \
     librariesform.ui \
     appsform.ui \
-    appconfigurationdialog.ui
+    appconfigurationdialog.ui \
+    newappdialog.ui
 
 RESOURCES += \
     resources.qrc

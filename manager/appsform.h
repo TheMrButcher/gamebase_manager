@@ -10,6 +10,7 @@ class AppsForm;
 
 class MainWindow;
 class QItemSelection;
+class NewAppDialog;
 class AppConfigurationDialog;
 
 class AppsForm : public QWidget
@@ -52,6 +53,7 @@ private:
 
     Ui::AppsForm *ui;
     AppsTableModel* appsModel;
+    NewAppDialog* newAppDialog;
     AppConfigurationDialog* configDialog;
 };
 

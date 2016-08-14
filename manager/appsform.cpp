@@ -5,6 +5,7 @@
 #include "files.h"
 #include "mainwindow.h"
 #include "appsourcemanagerlist.h"
+#include "newappdialog.h"
 #include "appconfigurationdialog.h"
 #include <QDir>
 #include <QFile>
@@ -20,6 +21,8 @@ AppsForm::AppsForm(MainWindow *parent) :
     ui->setupUi(this);
 
     appsModel = new AppsTableModel(this);
+    newAppDialog = new NewAppDialog(this);
+    newAppDialog->hide();
     configDialog = new AppConfigurationDialog(this);
     configDialog->hide();
     ui->appsTable->setModel(appsModel);
@@ -97,13 +100,13 @@ void AppsForm::on_createButton_clicked()
     pkgDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
     pkgDir.cd(Files::PACKAGE_DIR_NAME);
     pkgDir.cd("project_template");
-    bool ok = false;
-    QString name = QInputDialog::getText(this, "Введите название приложения",
-                                         "Название приложения:", QLineEdit::Normal,
-                                         "", &ok, Qt::WindowFlags(), Qt::ImhLatinOnly);
-    if (name.isEmpty() || !ok)
+
+    newAppDialog->reset();
+    bool ok = newAppDialog->exec() == QDialog::Accepted;
+    if (newAppDialog->name().isEmpty() || !ok)
         return;
 
+    QString name = newAppDialog->name();
     QString containerName = App::makeContainerName(dir, name);
     bool success = !containerName.isEmpty() && dir.mkdir(containerName);
 
@@ -118,7 +121,12 @@ void AppsForm::on_createButton_clicked()
     auto dstDir = dir;
     dstDir.cd(containerName);
 
-    Files::copyTextFile(pkgDir.absoluteFilePath("main.cpp"),
+    QString mainCppSourcePath;
+    if (newAppDialog->useSources())
+        mainCppSourcePath = QDir().absoluteFilePath(newAppDialog->sourcesPath());
+    else
+        mainCppSourcePath = pkgDir.absoluteFilePath("main.cpp");
+    Files::copyTextFile(mainCppSourcePath,
                         dstDir.absoluteFilePath("main.cpp"));
 
     App::createSolution(dstDir, name);
@@ -189,6 +197,11 @@ void AppsForm::on_removeButton_clicked()
     App app = appsModel->get()[row];
 
     if (!app.validate())
+        return;
+
+    auto answer = QMessageBox::question(this, "Удаление приложения",
+                                        "Вы уверены, что хотите удалить выбранное приложение?");
+    if (answer != QMessageBox::Yes)
         return;
 
     appsModel->removeRow(row);

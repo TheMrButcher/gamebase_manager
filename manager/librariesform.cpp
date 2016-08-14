@@ -175,6 +175,12 @@ void LibrariesForm::on_removeButton_clicked()
     if (row == -1)
         return;
     auto library = librariesModel->get()[row];
+
+    auto answer = QMessageBox::question(this, "Удаление библиотеки",
+                                        "Вы уверены, что хотите удалить выбранную версию библиотеки?");
+    if (answer != QMessageBox::Yes)
+        return;
+
     if (row == 0)
         librariesModel->replaceCurrentLibrary(
                     Library::makeAbsent(Settings::instance().workingDir()));
