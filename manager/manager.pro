@@ -48,7 +48,8 @@ SOURCES += main.cpp\
     appconfigurationdialog.cpp \
     appconfig.cpp \
     filesmanager.cpp \
-    progressmanager.cpp
+    progressmanager.cpp \
+    largefilemanager.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -81,7 +82,8 @@ HEADERS  += mainwindow.h \
     appconfigurationdialog.h \
     appconfig.h \
     filesmanager.h \
-    progressmanager.h
+    progressmanager.h \
+    largefilemanager.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

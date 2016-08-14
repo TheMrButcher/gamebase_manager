@@ -5,6 +5,8 @@
 #include <QRunnable>
 #include <QObject>
 
+class LargeFileManager;
+
 class LibraryCopier : public QObject, public QRunnable
 {
     Q_OBJECT
@@ -22,6 +24,7 @@ private:
 
     Library library;
     Library resultLibrary;
+    LargeFileManager* manager;
 };
 
 #endif // LIBRARYCOPIER_H

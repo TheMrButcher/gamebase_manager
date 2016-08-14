@@ -1,12 +1,17 @@
 #include "librarycopier.h"
 #include "files.h"
+#include "largefilemanager.h"
+#include "progressmanager.h"
 #include <QDir>
 #include <QFile>
 
 LibraryCopier::LibraryCopier(const Library& library, const Library& resultLibrary)
     : library(library)
     , resultLibrary(resultLibrary)
-{}
+{
+    ProgressManager::invokeShow("Копирование архива...", "Скопировано килобайт");
+    manager = new LargeFileManager(this);
+}
 
 void LibraryCopier::run()
 {
@@ -25,11 +30,12 @@ void LibraryCopier::run()
     dstDir.mkdir(resultLibrary.archiveName);
     srcDir.cd(library.archiveName);
     dstDir.cd(resultLibrary.archiveName);
-    QFile::copy(srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME),
-                dstDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME));
+    manager->copy(srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME),
+                  dstDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME));
     if (resultLibrary.state == Library::BinaryArchive)
-        QFile::copy(srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME),
-                    dstDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME));
+        manager->copy(srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME),
+                      dstDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME));
+    manager->run();
     return emitFinish();
 }
 

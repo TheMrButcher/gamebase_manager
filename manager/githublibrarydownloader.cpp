@@ -138,6 +138,7 @@ void GithubLibraryDownloader::startDownload(
         progressDialog->setBar(bar);
 
         progressDialog->setWindowTitle("Загрузка");
+        progressDialog->setMinimumWidth(400);
         progressDialog->setMinimumDuration(0);
         progressDialog->setRange(0, 0);
         progressDialog->setModal(true);
@@ -211,7 +212,7 @@ void GithubLibraryDownloader::onDownload(qint64 bytesReceived, qint64 /*bytesTot
         received += static_cast<int>(desc.bytesReceived);
     }
 
-    progressDialog->setLabelText(QString("Загружено %1 МБ").arg(received / (1024.0 * 1024.0)));
+    progressDialog->setLabelText(QString("Загружено: %1 МБ").arg(received / (1024.0 * 1024.0)));
 }
 
 void GithubLibraryDownloader::onCancel()
