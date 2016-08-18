@@ -8,6 +8,47 @@
 
 namespace {
 const int UNARCHIVE_BATCH_SIZE = 64;
+const int BUFFER_SIZE = 2048;
+
+bool makeDirInZip(QuaZip* zip, QString srcPath, QString dstPath)
+{
+    QuaZipFile dirZipFile(zip);
+    QuaZipNewInfo dirZipInfo(dstPath + "/", srcPath);
+    if (!dirZipFile.open(QIODevice::WriteOnly, dirZipInfo, 0, 0, 0))
+        return false;
+    dirZipFile.close();
+    return true;
+}
+
+bool compressFile(QuaZip* zip, QString srcPath, QString dstPath)
+{
+    QFile srcFile(srcPath);
+    if (!srcFile.open(QIODevice::ReadOnly))
+        return false;
+    QuaZipFile dstFile(zip);
+    QuaZipNewInfo dstFileInfo(dstPath, srcPath);
+    if (!dstFile.open(QIODevice::WriteOnly, dstFileInfo))
+        return false;
+
+    char buffer[BUFFER_SIZE];
+    while (!srcFile.atEnd()) {
+        int readSize = static_cast<int>(srcFile.read(buffer, BUFFER_SIZE));
+        if (readSize == 0)
+            break;
+        if (readSize < 0)
+            return false;
+        if (dstFile.write(buffer, readSize) != readSize)
+            return false;
+    }
+
+    if (dstFile.getZipError() != UNZ_OK)
+        return false;
+
+    dstFile.close();
+    if (dstFile.getZipError() != UNZ_OK)
+        return false;
+    return true;
+}
 }
 
 FilesManager::FilesManager(QObject *parent)
@@ -102,18 +143,52 @@ void FilesManager::copy(QString srcPath, QString dstPath)
                        rootDir.absoluteFilePath(dstPath) });
 }
 
+void FilesManager::archive(QString srcRootPath, QStringList files, QString dstPath)
+{
+    QString absSrcRootPath = rootDir.absoluteFilePath(srcRootPath);
+    QString absDstPath = rootDir.absoluteFilePath(dstPath);
+    QDir srcRootDir(absSrcRootPath);
+    if (!rootDir.exists()) {
+        ok = false;
+        return;
+    }
+
+    ops.append(OpDesc{ OpDesc::CreateArchive, QString(), absDstPath });
+    foreach (QString file, files)
+        archive(srcRootDir, file);
+    ops.append(OpDesc{ OpDesc::CloseArchive, QString(), absDstPath });
+}
+
 bool FilesManager::run()
 {
-    ProgressManager::invokeStart(ops.size());
+    int opsNum = ops.isEmpty() ? 1 : ops.size();
+    ProgressManager::invokeStart(opsNum);
     startFlag.testAndSetOrdered(0, 1);
     emit started();
+
+    if (isCanceled()) {
+        emit stopped();
+        return false;
+    }
+
+    if (ops.isEmpty()) {
+        ProgressManager::invokeSetProgress(opsNum);
+        emit stopped();
+        return isOK();
+    }
 
     QString curArchive;
     QString curDst;
     QStringList filesBatch;
+    QuaZip* dstZip = nullptr;
     foreach (const auto& op, ops) {
+        if (!ok)
+            break;
+
         if (isCanceled()) {
             emit stopped();
+            if (dstZip != nullptr)
+                delete dstZip;
             return false;
         }
 
@@ -137,7 +212,7 @@ bool FilesManager::run()
         case OpDesc::Unarchive:
             filesBatch.append(op.srcPath);
             if (filesBatch.size() >= UNARCHIVE_BATCH_SIZE) {
-                JlCompress::extractFiles(curArchive, filesBatch, curDst);
+                ok = ok && JlCompress::extractFiles(curArchive, filesBatch, curDst).size() != 0;
                 processedOps += filesBatch.size();
                 filesBatch.clear();
             }
@@ -146,7 +221,7 @@ bool FilesManager::run()
         case OpDesc::FinishUnarchive:
             ++processedOps;
             if (!filesBatch.empty()) {
-                JlCompress::extractFiles(curArchive, filesBatch, curDst);
+                ok = ok && JlCompress::extractFiles(curArchive, filesBatch, curDst).size() != 0;
                 processedOps += filesBatch.size();
                 filesBatch.clear();
             }
@@ -167,11 +242,44 @@ bool FilesManager::run()
             ++processedOps;
             break;
 
+        case OpDesc::CreateArchive:
+            dstZip = new QuaZip(op.dstPath);
+            if (!dstZip->open(QuaZip::mdCreate)) {
+                ok = false;
+                delete dstZip;
+                dstZip = nullptr;
+            }
+            ++processedOps;
+            break;
+
+        case OpDesc::AddToArchive:
+            if (dstZip)
+                ok = ok && compressFile(dstZip, op.srcPath, op.dstPath);
+            ++processedOps;
+            break;
+
+        case OpDesc::AddDirToArchive:
+            if (dstZip)
+                ok = ok && makeDirInZip(dstZip, op.srcPath, op.dstPath);
+            ++processedOps;
+            break;
+
+        case OpDesc::CloseArchive:
+            if (dstZip) {
+                dstZip->close();
+                delete dstZip;
+                dstZip = nullptr;
+            }
+            ++processedOps;
+            break;
+
         default: break;
         }
     }
-    ProgressManager::invokeSetProgress(ops.size());
+    ProgressManager::invokeSetProgress(opsNum);
     emit stopped();
+    if (dstZip != nullptr)
+        delete dstZip;
     return isOK();
 }
 
@@ -223,5 +331,24 @@ void FilesManager::copyFiles(QDir srcDir, QDir dstDir)
         } else {
             ops.append(OpDesc{ OpDesc::Copy, srcFilePath, dstFilePath });
         }
+    }
+}
+
+void FilesManager::archive(QDir srcRootDir, QString path)
+{
+    QFileInfo fileInfo(srcRootDir, path);
+    auto srcFilePath = srcRootDir.absoluteFilePath(path);
+    auto dstFilePath = srcRootDir.relativeFilePath(srcFilePath);
+    if (fileInfo.isDir()) {
+        ops.append(OpDesc{ OpDesc::AddDirToArchive, srcFilePath, dstFilePath });
+        QDir dir(srcRootDir.absoluteFilePath(path));
+        auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+        foreach (const auto& entry, entries) {
+            auto name = entry.fileName();
+            auto filePath = dir.absoluteFilePath(name);
+            archive(srcRootDir, filePath);
+        }
+    } else if (fileInfo.isFile()) {
+        ops.append(OpDesc{ OpDesc::AddToArchive, srcFilePath, dstFilePath });
     }
 }

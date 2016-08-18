@@ -43,35 +43,6 @@ Library checkDeployed(const LibrarySource& source, QDir dir)
     return Library{ source, Library::Deployed, version, QString() };
 }
 
-QString findVersionFile(QString archiveName)
-{
-    Archive archive(archiveName);
-    if (!archive.open())
-        return QString();
-    auto dir = archive.root();
-    if (dir.exists(Files::VERSION_FILE_NAME))
-        return dir.filePath(Files::VERSION_FILE_NAME);
-    return QString();
-}
-
-Version exctractVersion(QString archiveName)
-{
-    auto versionFilePath = findVersionFile(archiveName);
-    if (versionFilePath.isEmpty())
-        return Version{};
-
-    QTemporaryFile tempFile;
-    if (!tempFile.open())
-        return Version{};
-    auto tempFileName = tempFile.fileName();
-    JlCompress::extractFile(archiveName, versionFilePath, tempFileName);
-
-    Version version;
-    if (!version.read(tempFileName))
-        return Version{};
-    return version;
-}
-
 Library checkArchives(const LibrarySource& source, QDir dir)
 {
     if (!Files::exists(dir, Files::SOURCES_ARCHIVE_NAME))
@@ -79,7 +50,7 @@ Library checkArchives(const LibrarySource& source, QDir dir)
     Library::State state = Library::SourceCode;
     if (Files::exists(dir, Files::BINARY_ARCHIVE_NAME))
         state = Library::BinaryArchive;
-    Version version = exctractVersion(dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME));
+    Version version = Archive::extractVersion(dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME));
     if (version.empty())
         return Library::makeAbsent(source);
     return Library{ source, state, version, dir.dirName() };

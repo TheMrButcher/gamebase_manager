@@ -12,6 +12,7 @@ class MainWindow;
 class QItemSelection;
 class NewAppDialog;
 class AppConfigurationDialog;
+class AppCompressionDialog;
 
 class AppsForm : public QWidget
 {
@@ -55,6 +56,7 @@ private:
     AppsTableModel* appsModel;
     NewAppDialog* newAppDialog;
     AppConfigurationDialog* configDialog;
+    AppCompressionDialog* compressionDialog;
 };
 
 #endif // APPSFORM_H

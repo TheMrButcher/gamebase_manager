@@ -24,20 +24,24 @@ public:
     void rename(QString srcPath, QString dstPath);
     void copyFiles(QString srcPath, QString dstPath);
     void copy(QString srcPath, QString dstPath);
+    void archive(QString srcRootPath, QStringList files, QString dstPath);
     bool run();
 
 signals:
     void started();
     void stopped();
 
-private slots:
+public slots:
     void cancel();
+
+private slots:
     void onProgressUpdate();
 
 private:
     void removeDir(QString path);
     void removeFile(QString path);
     void copyFiles(QDir srcDir, QDir dstDir);
+    void archive(QDir srcRootDir, QString path);
 
     struct OpDesc {
         enum OpType {
@@ -48,7 +52,11 @@ private:
             FinishUnarchive,
             Rename,
             Copy,
-            MakeDir
+            MakeDir,
+            CreateArchive,
+            AddToArchive,
+            AddDirToArchive,
+            CloseArchive
         };
 
         OpType type;

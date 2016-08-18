@@ -2,6 +2,7 @@
 #include "settings.h"
 #include "files.h"
 #include "appconfig.h"
+#include "archive.h"
 #include <QHash>
 #include <QDir>
 #include <QFile>
@@ -282,8 +283,8 @@ App App::fromFileSystem(const AppSource& source, QString containerName)
             }
         }
         bool hasAllFiles = true;
-        if (!dir.exists("VERSION.txt")
-            || !version.read(dir.absoluteFilePath("VERSION.txt")))
+        if (!dir.exists(Files::VERSION_FILE_NAME)
+            || !version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME)))
             hasAllFiles = false;
         if (!dir.exists(Files::APP_CONFIG_NAME)
             || !dir.exists(Files::APP_PROJECT_NAME))
@@ -291,7 +292,7 @@ App App::fromFileSystem(const AppSource& source, QString containerName)
 
         {
             QDir workingDir;
-            if (!version.read(dir.absoluteFilePath("VERSION.txt"))
+            if (!version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME))
                 || !getDeployedConfigsDir(workingDir)
                 || !workingDir.exists(containerName + Files::APP_CONFIG_NAME))
                 hasAllFiles = false;
@@ -300,7 +301,19 @@ App App::fromFileSystem(const AppSource& source, QString containerName)
             state = Full;
         return App{ source, state, name, version, containerName };
     } else {
-        return makeAbsent(source);
+        Archive archive(dir.absoluteFilePath(containerName));
+        if (!archive.open())
+            return makeAbsent(source);
+        const auto& root = archive.root();
+        if (root.exists("main.cpp")) {
+            auto slnFiles = root.entryInfoList(QStringList("*.sln"), QDir::Files);
+            if (slnFiles.size() == 1) {
+                QString name = slnFiles.first().name;
+                name = name.mid(0, name.size() - 4);
+                Version version = archive.exctractVersion();
+                return App{ source, Archived, name, version, containerName };
+            }
+        }
     }
     return makeAbsent(source);
 }

@@ -50,7 +50,9 @@ SOURCES += main.cpp\
     filesmanager.cpp \
     progressmanager.cpp \
     largefilemanager.cpp \
-    newappdialog.cpp
+    newappdialog.cpp \
+    appcompressor.cpp \
+    appcompressiondialog.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -85,7 +87,9 @@ HEADERS  += mainwindow.h \
     filesmanager.h \
     progressmanager.h \
     largefilemanager.h \
-    newappdialog.h
+    newappdialog.h \
+    appcompressor.h \
+    appcompressiondialog.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
@@ -93,7 +97,8 @@ FORMS    += mainwindow.ui \
     librariesform.ui \
     appsform.ui \
     appconfigurationdialog.ui \
-    newappdialog.ui
+    newappdialog.ui \
+    appcompressiondialog.ui
 
 RESOURCES += \
     resources.qrc

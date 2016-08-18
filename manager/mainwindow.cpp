@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     qRegisterMetaType<Library>("Library");
+    qRegisterMetaType<App>("App");
 
     librarySourceManagers = new LibrarySourceManagerList(this);
     appSourceManagers = new AppSourceManagerList(this);

@@ -83,9 +83,9 @@ bool Settings::read(QString fname)
         auto path = Files::absPath(sourceObj["path"].toString());
         if (path.isEmpty())
             continue;
-        AppSource::Type type = path == workingDir
-            ? AppSource::WorkingDirectory : AppSource::Directory;
-        appSources.append(AppSource{ type, path, SourceStatus::Unknown });
+        if (path == workingDir)
+            continue;
+        appSources.append(AppSource{ AppSource::Directory, path, SourceStatus::Unknown });
     }
 
     return true;
@@ -120,6 +120,8 @@ void Settings::write(QString fname)
 
     QJsonArray appSourcesArray;
     foreach (auto source, appSources) {
+        if (source.type == AppSource::WorkingDirectory)
+            continue;
         QJsonObject sourceObj;
         sourceObj["path"] = dir.relativeFilePath(source.path);
         appSourcesArray.append(sourceObj);
@@ -159,7 +161,10 @@ Settings Settings::defaultValue()
     librarySources.append(LibrarySource{
             LibrarySource::DownloadsDirectory, downloadsPath, SourceStatus::Unknown });
 
-    return Settings{ librarySources, QList<AppSource>(), extractVCVarsPath() };
+    QList<AppSource> appSources;
+    appSources.append(AppSource{ AppSource::WorkingDirectory, workingPath, SourceStatus::Unknown });
+
+    return Settings{ librarySources, appSources, extractVCVarsPath() };
 }
 
 Settings& Settings::instance()

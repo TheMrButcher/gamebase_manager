@@ -7,12 +7,15 @@
 #include "appsourcemanagerlist.h"
 #include "newappdialog.h"
 #include "appconfigurationdialog.h"
+#include "appcompressiondialog.h"
+#include "appcompressor.h"
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QUrl>
 #include <QDesktopServices>
+#include <QThreadPool>
 
 AppsForm::AppsForm(MainWindow *parent) :
     QWidget(parent),
@@ -25,6 +28,8 @@ AppsForm::AppsForm(MainWindow *parent) :
     newAppDialog->hide();
     configDialog = new AppConfigurationDialog(this);
     configDialog->hide();
+    compressionDialog = new AppCompressionDialog(this);
+    compressionDialog->hide();
     ui->appsTable->setModel(appsModel);
     ui->appsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->appsTable->setColumnWidth(1, 150);
@@ -63,7 +68,8 @@ void AppsForm::onAppAdded(App app)
 {
     if (!app.exists())
         return;
-    app.configurate();
+    if (app.checkAbility(App::Configure))
+        app.configurate();
     app.validate();
     appsModel->append(app);
 }
@@ -216,7 +222,36 @@ void AppsForm::on_removeButton_clicked()
 
 void AppsForm::on_compressButton_clicked()
 {
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
 
+    compressionDialog->set(app);
+    if (compressionDialog->exec() != QDialog::Accepted)
+        return;
+
+    AppSource newAppSource{ AppSource::Directory, compressionDialog->path(), SourceStatus::Unknown };
+    if (newAppSource.check() != SourceStatus::OK) {
+        if (QDir().mkpath(compressionDialog->path()) || newAppSource.check() != SourceStatus::OK) {
+            QMessageBox::warning(this, "Ошибка при сжатии приложения",
+                                 "Невозможно создать выбранную для архива папку");
+            return;
+        }
+    }
+    if (compressionDialog->path() == Settings::instance().workingDir().path)
+        newAppSource.type = AppSource::WorkingDirectory;
+    App newApp{ newAppSource, App::Archived, app.name, app.version, compressionDialog->name() + ".zip" };
+
+    auto compressor = new AppCompressor(app, newApp);
+    bool isAppSource = false;
+    foreach (const auto& source, Settings::instance().appSources)
+        if (source == newAppSource)
+            isAppSource = true;
+    if (isAppSource)
+        connect(compressor, SIGNAL(finishedCompress(App)),
+                this, SLOT(onAppAdded(App)));
+    QThreadPool::globalInstance()->start(compressor);
 }
 
 void AppsForm::on_addButton_clicked()

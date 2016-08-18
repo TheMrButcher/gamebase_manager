@@ -4,6 +4,18 @@
 #include <QWidget>
 #include <QDir>
 
+namespace {
+void addApps(const AppSource& source, const QStringList& files, QList<App>& apps)
+{
+    foreach (auto child, files) {
+        auto app = App::fromFileSystem(source, child);
+        if (app.state == App::Absent)
+            continue;
+        apps.append(app);
+    }
+}
+}
+
 AppSourceManager::AppSourceManager(const AppSource& source, QWidget* parent)
     : QObject(parent)
     , source(source)
@@ -17,17 +29,13 @@ void AppSourceManager::update()
     }
 
     QDir dir(source.path);
-    auto children = source.type == AppSource::WorkingDirectory
-            ? dir.entryList(QDir::NoDotAndDotDot | QDir::Dirs)
-            : dir.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
+    auto dirs = dir.entryList(QDir::NoDotAndDotDot | QDir::Dirs);
+    auto files = dir.entryList(QStringList("*.zip"), QDir::Files);
+
     QList<App> apps;
-    apps.reserve(children.size());
-    foreach (auto child, children) {
-        auto app = App::fromFileSystem(source, child);
-        if (app.state == App::Absent)
-            continue;
-        apps.append(app);
-    }
+    apps.reserve(dirs.size() + files.size());
+    addApps(source, dirs, apps);
+    addApps(source, files, apps);
     emit finishedUpdate(source, apps);
 }
 

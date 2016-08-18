@@ -7,6 +7,7 @@
 #include <QAtomicInt>
 
 class QTimer;
+class QIODevice;
 
 class LargeFileManager : public QObject
 {
@@ -20,6 +21,8 @@ public:
     bool isOK() const;
     void copy(QString srcPath, QString dstPath);
     bool run();
+
+    static bool copy(QIODevice* src, QIODevice* dst);
 
 signals:
     void started();
