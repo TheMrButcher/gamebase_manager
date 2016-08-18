@@ -52,7 +52,8 @@ SOURCES += main.cpp\
     largefilemanager.cpp \
     newappdialog.cpp \
     appcompressor.cpp \
-    appcompressiondialog.cpp
+    appcompressiondialog.cpp \
+    appadder.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -89,7 +90,8 @@ HEADERS  += mainwindow.h \
     largefilemanager.h \
     newappdialog.h \
     appcompressor.h \
-    appcompressiondialog.h
+    appcompressiondialog.h \
+    appadder.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

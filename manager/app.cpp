@@ -100,7 +100,7 @@ bool App::checkAbility(App::Ability ability) const
     case Compress: return (state == NotConfigured || state == Full)
                 && source.type == AppSource::WorkingDirectory;
     case Add: return state != Absent
-                && source.type != AppSource::WorkingDirectory;
+                && (source.type != AppSource::WorkingDirectory || state == Archived);
     case Deploy: return state == Full
                 && source.type == AppSource::WorkingDirectory;
     case OpenSolution: return state == NotConfigured || state == Full;

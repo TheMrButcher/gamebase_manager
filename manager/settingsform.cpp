@@ -220,5 +220,5 @@ void SettingsForm::on_chooseVCVarsPath_clicked()
 
 void SettingsForm::on_updateButton_clicked()
 {
-    mainWindow->update(get());
+    mainWindow->update();
 }

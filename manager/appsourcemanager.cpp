@@ -1,8 +1,10 @@
 #include "appsourcemanager.h"
 #include "settings.h"
 #include "files.h"
+#include "appadder.h"
 #include <QWidget>
 #include <QDir>
+#include <QThreadPool>
 
 namespace {
 void addApps(const AppSource& source, const QStringList& files, QList<App>& apps)
@@ -41,43 +43,7 @@ void AppSourceManager::update()
 
 void AppSourceManager::addToWorkingDir(App app)
 {
-    auto workingDir = Settings::instance().workingDir();
-    auto resultApp = app.afterAction(App::Add);
-    if (workingDir.check() != SourceStatus::OK) {
-        emit finishedAdd(resultApp);
-        return;
-    }
-
-    if (app.source.check() != SourceStatus::OK) {
-        emit finishedAdd(resultApp);
-        return;
-    }
-
-    QDir srcDir(app.source.path);
-    if (!srcDir.exists(app.containerName)) {
-        emit finishedAdd(resultApp);
-        return;
-    }
-
-    QDir dstDir(workingDir.path);
-    if (resultApp.containerName.isEmpty() || dstDir.exists(resultApp.containerName)) {
-        emit finishedAdd(resultApp);
-        return;
-    }
-
-    if (app.state == App::NotConfigured || app.state == App::Full) {
-        if (!srcDir.cd(app.containerName)) {
-            emit finishedAdd(resultApp);
-            return;
-        }
-
-        if (!dstDir.mkdir(resultApp.containerName)) {
-            emit finishedAdd(resultApp);
-            return;
-        }
-        dstDir.cd(resultApp.containerName);
-        Files::copyDir(srcDir, dstDir);
-    }
-
-    emit finishedAdd(resultApp);
+    AppAdder* adder = new AppAdder(app);
+    connect(adder, SIGNAL(finishedAdd(App)), this, SIGNAL(finishedAdd(App)));
+    QThreadPool::globalInstance()->start(adder);
 }

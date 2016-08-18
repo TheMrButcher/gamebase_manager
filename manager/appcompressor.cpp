@@ -4,8 +4,6 @@
 #include <QDir>
 #include <QFileInfo>
 
-#include <QDebug>
-
 AppCompressor::AppCompressor(const App& srcApp, const App& dstApp)
     : srcApp(srcApp)
     , dstApp(dstApp)

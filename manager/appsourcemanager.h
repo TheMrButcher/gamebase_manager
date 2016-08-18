@@ -6,6 +6,7 @@
 #include <QObject>
 
 class QWidget;
+class FilesManager;
 
 class AppSourceManager : public QObject
 {
