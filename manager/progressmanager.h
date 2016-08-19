@@ -14,6 +14,7 @@ public:
 
     static ProgressManager* instance();
     static void invokeShow(QString title, QString labelAfterStart);
+    static void invokeSetLabel(QString label);
     static void invokeStart(int value);
     static void invokeSetProgress(int value);
 
@@ -22,6 +23,7 @@ signals:
 
 public slots:
     void show(QString title, QString labelAfterStart);
+    void setLabel(QString label);
     void start(int maxValue);
     void setProgress(int value);
 

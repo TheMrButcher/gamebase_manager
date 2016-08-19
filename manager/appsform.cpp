@@ -9,6 +9,8 @@
 #include "appconfigurationdialog.h"
 #include "appcompressiondialog.h"
 #include "appcompressor.h"
+#include "appdeployer.h"
+#include "appdeploysuccessdialog.h"
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
@@ -30,6 +32,8 @@ AppsForm::AppsForm(MainWindow *parent) :
     configDialog->hide();
     compressionDialog = new AppCompressionDialog(this);
     compressionDialog->hide();
+    deploySuccessDialog = new AppDeploySuccessDialog(this);
+    deploySuccessDialog->hide();
     ui->appsTable->setModel(appsModel);
     ui->appsTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->appsTable->setColumnWidth(1, 150);
@@ -84,6 +88,54 @@ void AppsForm::onAppUpdate(App app)
 void AppsForm::onAppRename(App oldApp, App newApp)
 {
     appsModel->replace(oldApp.source, oldApp.containerName, newApp);
+}
+
+void AppsForm::onTempAppAdded(App app)
+{
+    if (!app.exists()) {
+        QMessageBox::warning(this, "Ошибка при создании временной папки",
+                             "Невозможно создать папку для построения приложения");
+        return;
+    }
+
+    QDir dir;
+    auto outputPath = Settings::instance().outputPath;
+    if (!dir.cd(outputPath)) {
+        auto answer = QMessageBox::question(this, "Создание папки для построенных приложений",
+                                            "Папка для построенных приложений отсутствует. Создать?");
+        if (answer != QMessageBox::Yes)
+            return;
+        dir.mkpath(outputPath);
+        if (!dir.cd(outputPath))
+            return;
+    }
+
+    QString containerName = app.name + "_" + app.version.version.join('_');
+    containerName = App::makeContainerName(dir, containerName);
+    if (containerName.isEmpty()) {
+        QMessageBox::warning(this, "Ошибка при построении приложения",
+                             "Невозможно создать папку для построенного приложения");
+        return;
+    }
+
+    auto deployer = new AppDeployer(app, dir.absoluteFilePath(containerName));
+    connect(deployer, SIGNAL(finishedDeploy(App,QString,bool)),
+            this, SLOT(onAppDeployed(App,QString,bool)));
+    QThreadPool::globalInstance()->start(deployer);
+}
+
+void AppsForm::onAppDeployed(App app, QString path, bool success)
+{
+    removeApp(app);
+    if (success) {
+        deploySuccessDialog->set(path, app.name + ".exe");
+        deploySuccessDialog->exec();
+    } else {
+        QMessageBox::warning(this, "Ошибка при построении приложения",
+                             "Произошла ошибка при построении приложения. "
+                             "Проверьте, что приложение правильно сконфигурирвано "
+                             "и может быть скомпилировано на данном компьютере.");
+    }
 }
 
 void AppsForm::onAppsSelectionChanged(const QItemSelection&, const QItemSelection&)
@@ -158,6 +210,17 @@ int AppsForm::selectedRow() const
     return rows[0].row();
 }
 
+void AppsForm::removeApp(App app)
+{
+    app.removeConfig();
+    QDir dir(app.source.path);
+    if (dir.cd(app.containerName)) {
+        dir.removeRecursively();
+    } else {
+        dir.remove(app.containerName);
+    }
+}
+
 void AppsForm::updateButtons()
 {
     int row = selectedRow();
@@ -211,13 +274,7 @@ void AppsForm::on_removeButton_clicked()
         return;
 
     appsModel->removeRow(row);
-    app.removeConfig();
-    QDir dir(app.source.path);
-    if (dir.cd(app.containerName)) {
-        dir.removeRecursively();
-    } else {
-        dir.remove(app.containerName);
-    }
+    removeApp(app);
 }
 
 void AppsForm::on_compressButton_clicked()
@@ -278,7 +335,25 @@ void AppsForm::on_addButton_clicked()
 
 void AppsForm::on_deployButton_clicked()
 {
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
 
+    QString tempAppContainerName = App::makeContainerName(
+                QDir(app.source.path),
+                app.containerName + "_temp");
+    if (tempAppContainerName.isEmpty()) {
+        QMessageBox::warning(this, "Ошибка при создании временной папки",
+                             "Невозможно создать папку для построения приложения");
+        return;
+    }
+
+    App tempApp{ app.source, App::NotConfigured, app.name, app.version, tempAppContainerName };
+    auto compressor = new AppCompressor(app, tempApp);
+    connect(compressor, SIGNAL(finishedCompress(App)),
+            this, SLOT(onTempAppAdded(App)));
+    QThreadPool::globalInstance()->start(compressor);
 }
 
 void AppsForm::on_openSolutionButton_clicked()

@@ -53,7 +53,10 @@ SOURCES += main.cpp\
     newappdialog.cpp \
     appcompressor.cpp \
     appcompressiondialog.cpp \
-    appadder.cpp
+    appadder.cpp \
+    appdeployer.cpp \
+    compiler.cpp \
+    appdeploysuccessdialog.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -91,7 +94,10 @@ HEADERS  += mainwindow.h \
     newappdialog.h \
     appcompressor.h \
     appcompressiondialog.h \
-    appadder.h
+    appadder.h \
+    appdeployer.h \
+    compiler.h \
+    appdeploysuccessdialog.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
@@ -100,7 +106,8 @@ FORMS    += mainwindow.ui \
     appsform.ui \
     appconfigurationdialog.ui \
     newappdialog.ui \
-    appcompressiondialog.ui
+    appcompressiondialog.ui \
+    appdeploysuccessdialog.ui
 
 RESOURCES += \
     resources.qrc

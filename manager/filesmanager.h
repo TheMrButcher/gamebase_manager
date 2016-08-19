@@ -22,6 +22,7 @@ public:
     void remove(QString path);
     void unarchive(QString archivePath, QString dstPath);
     void rename(QString srcPath, QString dstPath);
+    void copyTree(QString srcPath, QString dstPath);
     void copyFiles(QString srcPath, QString dstPath);
     void copy(QString srcPath, QString dstPath);
     void archive(QString srcRootPath, QStringList files, QString dstPath);

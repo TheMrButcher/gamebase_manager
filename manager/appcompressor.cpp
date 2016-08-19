@@ -8,7 +8,11 @@ AppCompressor::AppCompressor(const App& srcApp, const App& dstApp)
     : srcApp(srcApp)
     , dstApp(dstApp)
 {
-    ProgressManager::instance()->show("Сжатие приложения...", "Сжато файлов");
+    if (dstApp.state == App::Archived) {
+        ProgressManager::instance()->show("Сжатие приложения...", "Сжато файлов");
+    } else {
+        ProgressManager::instance()->show("Копирование приложения...", "Скопировано файлов");
+    }
     manager = new FilesManager(this);
     manager->setRootDirectory(srcApp.source.path);
 }
@@ -41,10 +45,19 @@ void AppCompressor::run()
     }
 
     QDir dstDir(dstApp.source.path);
-    if (!filesToCompress.isEmpty() && dstDir.exists()) {
-        manager->archive(srcDir.absoluteFilePath(srcApp.containerName),
-                         filesToCompress,
-                         dstDir.absoluteFilePath(dstApp.containerName));
+    if (dstApp.state == App::Archived) {
+        if (!filesToCompress.isEmpty() && dstDir.exists()) {
+            manager->archive(srcDir.absoluteFilePath(srcApp.containerName),
+                             filesToCompress,
+                             dstDir.absoluteFilePath(dstApp.containerName));
+        }
+    } else {
+        if (dstDir.mkdir(dstApp.containerName) && dstDir.cd(dstApp.containerName)) {
+            foreach (auto file, filesToCompress) {
+                manager->copyTree(appDir.absoluteFilePath(file),
+                                  dstDir.absoluteFilePath(file));
+            }
+        }
     }
     manager->run();
     emit finishedCompress(dstApp);

@@ -71,6 +71,7 @@ void SettingsForm::set(const Settings& settings)
     appSourcesModel->set(appSources);
 
     ui->vcVarsPath->setText(settings.vcVarsPath);
+    ui->outputDir->setText(settings.outputPath);
 }
 
 Settings SettingsForm::get() const
@@ -86,6 +87,7 @@ Settings SettingsForm::get() const
     result.appSources.append(AppSource{
         AppSource::WorkingDirectory, ui->workingDir->text(), SourceStatus::Unknown });
     result.vcVarsPath = ui->vcVarsPath->text();
+    result.outputPath = ui->outputDir->text();
     return result;
 }
 
@@ -206,6 +208,14 @@ void SettingsForm::on_chooseDownloadsDir_clicked()
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке для загрузок");
     if (!path.isEmpty()) {
         ui->downloadsDir->setText(path);
+    }
+}
+
+void SettingsForm::on_chooseOutputDir_clicked()
+{
+    QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке для построенных приложений");
+    if (!path.isEmpty()) {
+        ui->outputDir->setText(path);
     }
 }
 

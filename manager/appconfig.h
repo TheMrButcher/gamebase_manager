@@ -19,6 +19,8 @@ public:
     bool write(QDir rootDir, QString path) const;
 
     static AppConfig defaultConfig();
+    static AppConfig makeDeployedAppConfig(
+            QDir rootDir, const AppConfig& originConfig);
 
 private:
     QJsonObject rootObj;

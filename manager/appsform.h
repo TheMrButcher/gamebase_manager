@@ -13,6 +13,7 @@ class QItemSelection;
 class NewAppDialog;
 class AppConfigurationDialog;
 class AppCompressionDialog;
+class AppDeploySuccessDialog;
 
 class AppsForm : public QWidget
 {
@@ -29,6 +30,8 @@ private slots:
     void onAppAdded(App app);
     void onAppUpdate(App app);
     void onAppRename(App oldApp, App newApp);
+    void onTempAppAdded(App app);
+    void onAppDeployed(App app, QString path, bool success);
 
     void onAppsSelectionChanged(const QItemSelection &, const QItemSelection &);
 
@@ -50,6 +53,7 @@ private slots:
 
 private:
     int selectedRow() const;
+    void removeApp(App app);
     void updateButtons();
 
     Ui::AppsForm *ui;
@@ -57,6 +61,7 @@ private:
     NewAppDialog* newAppDialog;
     AppConfigurationDialog* configDialog;
     AppCompressionDialog* compressionDialog;
+    AppDeploySuccessDialog* deploySuccessDialog;
 };
 
 #endif // APPSFORM_H

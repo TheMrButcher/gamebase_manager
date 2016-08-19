@@ -21,6 +21,7 @@ public:
     QList<LibrarySource> librarySources;
     QList<AppSource> appSources;
     QString vcVarsPath;
+    QString outputPath;
 };
 
 #endif // SETTINGS_H

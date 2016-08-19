@@ -125,6 +125,21 @@ void FilesManager::rename(QString srcPath, QString dstPath)
     ops.append(OpDesc{ OpDesc::Rename, srcPath, dstPath });
 }
 
+void FilesManager::copyTree(QString srcPath, QString dstPath)
+{
+    QFileInfo srcFileInfo(rootDir, srcPath);
+    if (srcFileInfo.isDir()) {
+        QDir srcDir(rootDir.absoluteFilePath(srcPath));
+        QDir dstDir(rootDir.absoluteFilePath(dstPath));
+        ops.append(OpDesc{ OpDesc::MakeDir, QString(), dstDir.absolutePath() });
+        copyFiles(srcDir, dstDir);
+    } else if (srcFileInfo.isFile()) {
+        copy(srcPath, dstPath);
+    } else {
+        ok = false;
+    }
+}
+
 void FilesManager::copyFiles(QString srcPath, QString dstPath)
 {
     if (!QFileInfo(rootDir, srcPath).isDir()) {

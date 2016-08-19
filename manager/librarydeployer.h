@@ -7,6 +7,7 @@
 #include <QDir>
 
 class FilesManager;
+class Compiler;
 
 class LibraryDeployer : public QObject, public QRunnable
 {
@@ -23,13 +24,12 @@ signals:
 private:
     bool unarchiveSources(QDir srcDir);
     bool compileSources(QDir dir);
-    bool compileProject(QDir projectDir);
-    bool compileProject(QDir projectDir, QString scriptName);
     void emitFinish();
 
     Library library;
     LibrarySource workingDir;
     FilesManager* manager;
+    Compiler* compiler;
 };
 
 #endif // LIBRARYDEPLOYER_H

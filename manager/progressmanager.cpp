@@ -21,6 +21,11 @@ void ProgressManager::invokeShow(QString title, QString labelAfterStart)
                               Q_ARG(QString, title), Q_ARG(QString, labelAfterStart));
 }
 
+void ProgressManager::invokeSetLabel(QString label)
+{
+    QMetaObject::invokeMethod(instance(), "setLabel", Q_ARG(QString, label));
+}
+
 void ProgressManager::invokeStart(int value)
 {
     QMetaObject::invokeMethod(instance(), "start", Q_ARG(int, value));
@@ -39,6 +44,11 @@ void ProgressManager::show(QString title, QString labelAfterStart)
     progressDialog->setLabelText("Подготавливается список файлов...");
     progressDialog->show();
     this->labelAfterStart = labelAfterStart;
+}
+
+void ProgressManager::setLabel(QString label)
+{
+    progressDialog->setLabelText(label);
 }
 
 void ProgressManager::start(int maxValue)

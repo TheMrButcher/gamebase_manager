@@ -79,3 +79,13 @@ AppConfig AppConfig::defaultConfig()
     config.fontsPath = dir.absoluteFilePath(Files::FONTS_DIR_NAME);
     return config;
 }
+
+AppConfig AppConfig::makeDeployedAppConfig(QDir rootDir, const AppConfig& originConfig)
+{
+    AppConfig config = originConfig;
+    config.imagesPath = rootDir.absoluteFilePath("resources/images");
+    config.designPath = rootDir.absoluteFilePath("resources/designs");
+    config.shadersPath = rootDir.absoluteFilePath("resources/shaders");
+    config.fontsPath = rootDir.absoluteFilePath("resources/fonts");
+    return config;
+}

@@ -53,6 +53,8 @@ private slots:
 
     void on_chooseDownloadsDir_clicked();
 
+    void on_chooseOutputDir_clicked();
+
     void on_chooseVCVarsPath_clicked();
 
     void on_updateButton_clicked();

@@ -33,7 +33,7 @@ bool getDeployedConfigsDir(QDir& dir)
     return true;
 }
 
-bool updateMainCppImpl(QDir dir, QString containerName, int fixIteration)
+bool updateMainCppImpl(QDir dir, QString configName, int fixIteration)
 {
     QFile srcFile(dir.absoluteFilePath("main.cpp"));
     if (!srcFile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -55,7 +55,7 @@ bool updateMainCppImpl(QDir dir, QString containerName, int fixIteration)
                 if (endIndex != -1) {
                     found = true;
                     line = line.mid(0, startIndex + SET_CONFIG_PREFIX.length())
-                            + containerName + Files::APP_CONFIG_NAME
+                            + configName
                             + line.mid(endIndex);
                 }
             }
@@ -66,7 +66,7 @@ bool updateMainCppImpl(QDir dir, QString containerName, int fixIteration)
             if (startIndex != -1) {
                 found = true;
                 QString newLine = line.mid(0, startIndex) +
-                        SET_CONFIG_PREFIX + containerName + Files::APP_CONFIG_NAME +
+                        SET_CONFIG_PREFIX + configName +
                         SET_CONFIG_SUFFIX;
                 outStream << newLine << endl;
             }
@@ -194,6 +194,11 @@ void App::removeConfig()
 
 bool App::updateMainCpp()
 {
+    return updateMainCpp(containerName + Files::APP_CONFIG_NAME);
+}
+
+bool App::updateMainCpp(QString configName)
+{
     if (!checkAbility(Configure))
         return false;
     if (source.check() != SourceStatus::OK)
@@ -201,9 +206,9 @@ bool App::updateMainCpp()
     QDir dir(source.path);
     dir.cd(containerName);
 
-    bool found = updateMainCppImpl(dir, containerName, 0);
+    bool found = updateMainCppImpl(dir, configName, 0);
     if (!found)
-        found = updateMainCppImpl(dir, containerName, 1);
+        found = updateMainCppImpl(dir, configName, 1);
 
     dir.remove("main.cpp");
     dir.rename("main.cpp_temp", "main.cpp");
@@ -328,11 +333,11 @@ App App::makeAbsent()
     return makeAbsent(AppSource{ AppSource::None, "", SourceStatus::Broken });
 }
 
-QString App::makeContainerName(QDir dir, QString baseName)
+QString App::makeContainerName(QDir dir, QString baseName, int maxIndex)
 {
     if (dir.exists(baseName)) {
-        for (int i = 2; i < 10; ++i) {
-            QString containerName = baseName + QString::number(i);
+        for (int i = 2; i < maxIndex; ++i) {
+            QString containerName = baseName + "_" + QString::number(i);
             if (!dir.exists(containerName)) {
                 return containerName;
             }

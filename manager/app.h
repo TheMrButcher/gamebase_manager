@@ -42,13 +42,14 @@ public:
     bool setConfig(const AppConfig& config);
     void removeConfig();
     bool updateMainCpp();
+    bool updateMainCpp(QString configName);
     bool isMainCppOK();
     bool configurate();
 
     static App fromFileSystem(const AppSource& source, QString containerName);
     static App makeAbsent(const AppSource& source);
     static App makeAbsent();
-    static QString makeContainerName(QDir dir, QString baseName);
+    static QString makeContainerName(QDir dir, QString baseName, int maxIndex = 10);
     static bool createSolution(QDir dir, QString name);
 };
 

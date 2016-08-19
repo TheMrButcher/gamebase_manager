@@ -10,6 +10,7 @@
 namespace {
 const QString DEFAULT_WORKING_DIR = "programs";
 const QString DEFAULT_DOWNLOADS_DIR = "downloads";
+const QString DEFAULT_OUTPUT_DIR = "output";
 const LibrarySource DEFAULT_LIBRARY_SOURCE{
     LibrarySource::Server,
     "https://github.com/TheMrButcher/gamebase",
@@ -53,6 +54,7 @@ bool Settings::read(QString fname)
     auto workingDir = Files::absPath(rootObj["workingDir"].toString(this->workingDir().path));
     auto downloadsDir = Files::absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
+    outputPath = rootObj["outputPath"].toString(outputPath);
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
@@ -103,6 +105,7 @@ void Settings::write(QString fname)
     rootObj["workingDir"] = dir.relativeFilePath(workingDir().path);
     rootObj["downloadsDir"] = dir.relativeFilePath(downloadsDir().path);
     rootObj["vcVarsPath"] = vcVarsPath;
+    rootObj["outputPath"] = outputPath;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
@@ -164,7 +167,8 @@ Settings Settings::defaultValue()
     QList<AppSource> appSources;
     appSources.append(AppSource{ AppSource::WorkingDirectory, workingPath, SourceStatus::Unknown });
 
-    return Settings{ librarySources, appSources, extractVCVarsPath() };
+    QString outputPath = QDir().absoluteFilePath(DEFAULT_OUTPUT_DIR);
+    return Settings{ librarySources, appSources, extractVCVarsPath(), outputPath };
 }
 
 Settings& Settings::instance()

@@ -4,17 +4,10 @@
 #include "archive.h"
 #include "filesmanager.h"
 #include "progressmanager.h"
+#include "compiler.h"
 #include <JlCompress.h>
 #include <QWidget>
 #include <QDir>
-#include <QProcess>
-
-#include <QThread>
-#include <QDebug>
-
-namespace {
-const QString COMPILATION_BATCH_NAME = "compile.bat";
-}
 
 LibraryDeployer::LibraryDeployer(const Library& library)
     : library(library)
@@ -22,6 +15,7 @@ LibraryDeployer::LibraryDeployer(const Library& library)
     workingDir = Settings::instance().workingDir();
     manager = new FilesManager(this);
     manager->setRootDirectory(workingDir.path);
+    compiler = new Compiler(this);
 }
 
 void LibraryDeployer::run()
@@ -126,55 +120,15 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir)
 
 bool LibraryDeployer::compileSources(QDir dir)
 {
-    qDebug() << "Started compilation";
     dir.cd(Files::SOURCES_DIR_NAME);
     dir.cd(Files::GAMEBASE_PROJECT_NAME);
-    if (!compileProject(dir))
+    if (!compiler->compile(dir))
         return false;
     dir.cdUp();
     dir.cd(Files::EDITOR_PROJECT_NAME);
-    if (!compileProject(dir))
+    if (!compiler->compile(dir))
         return false;
     return true;
-}
-
-bool LibraryDeployer::compileProject(QDir projectDir)
-{
-    QFile::copy(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
-    auto result = compileProject(projectDir, COMPILATION_BATCH_NAME);
-    projectDir.remove(COMPILATION_BATCH_NAME);
-    return result;
-}
-
-bool LibraryDeployer::compileProject(QDir projectDir, QString scriptName)
-{
-    QProcess cmdProcess;
-    cmdProcess.setWorkingDirectory(projectDir.absolutePath());
-    cmdProcess.setProcessChannelMode(QProcess::MergedChannels);
-
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    auto vcVarsPath = Settings::instance().vcVarsPath;
-    if (vcVarsPath.isEmpty())
-        return false;
-    env.insert("VISUAL_CPP_VARIABLES_PATH", vcVarsPath);
-    env.insert("SOLUTION_TO_BUILD_NAME", projectDir.dirName() + ".sln");
-    cmdProcess.setProcessEnvironment(env);
-
-    QStringList arguments;
-    arguments << "/U" << "/C" << scriptName;
-    cmdProcess.start("cmd.exe", arguments);
-    qDebug() << "Started process";
-    if (!cmdProcess.waitForStarted(5000))
-        return false;
-    while (cmdProcess.state() == QProcess::Running) {
-        while (cmdProcess.waitForReadyRead(2000)) {
-            while (cmdProcess.canReadLine())
-                qDebug() << QString::fromUtf8(cmdProcess.readLine());
-        }
-    }
-    while (cmdProcess.canReadLine())
-        qDebug() << QString::fromUtf8(cmdProcess.readLine());
-    return cmdProcess.exitCode() == 0;
 }
 
 void LibraryDeployer::emitFinish()
