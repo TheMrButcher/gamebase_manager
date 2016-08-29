@@ -44,9 +44,19 @@ bool operator==(const Version& v1, const Version& v2)
     return v1.version == v2.version;
 }
 
+bool operator!=(const Version& v1, const Version& v2)
+{
+    return v1.version != v2.version;
+}
+
 bool operator<(const Version& v1, const Version& v2)
 {
     return std::lexicographical_compare(
                 v1.version.begin(), v1.version.end(),
                 v2.version.begin(), v2.version.end());
+}
+
+bool operator<=(const Version& v1, const Version& v2)
+{
+    return !(v2 < v1);
 }

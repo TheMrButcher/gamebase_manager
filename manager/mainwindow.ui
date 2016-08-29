@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>400</height>
+    <width>1024</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Менеджер пакета Gamebase</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -20,13 +20,13 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>3</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="mainTab">
          <attribute name="title">
           <string>Главная</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_4"/>
+         <layout class="QGridLayout" name="mainTabLayout"/>
         </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
@@ -57,7 +57,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1024</width>
      <height>21</height>
     </rect>
    </property>

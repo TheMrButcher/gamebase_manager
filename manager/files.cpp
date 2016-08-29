@@ -83,5 +83,7 @@ QString Files::absPath(QString path)
 QString Files::absPath(QDir dir, QString path)
 {
     QFileInfo file(dir, path);
-    return file.canonicalFilePath();
+    if (file.exists())
+        return file.canonicalFilePath();
+    return file.absoluteFilePath();
 }

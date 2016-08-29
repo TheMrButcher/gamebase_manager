@@ -17,6 +17,7 @@ public:
 
     static Settings defaultValue();
     static Settings& instance();
+    static QString extractVCVarsPath();
 
     QList<LibrarySource> librarySources;
     QList<AppSource> appSources;

@@ -17,25 +17,6 @@ const LibrarySource DEFAULT_LIBRARY_SOURCE{
     SourceStatus::Unknown };
 const QString MSVC_2010_TOOLS_KEY = "VS100COMNTOOLS";
 const QString VC_VARS_BAT_NAME = "vcvarsall.bat";
-
-QString extractVCVarsPath()
-{
-    auto env = QProcessEnvironment::systemEnvironment();
-    if (!env.contains(MSVC_2010_TOOLS_KEY))
-        return QString();
-    QDir vcDir(env.value(MSVC_2010_TOOLS_KEY));
-    if (!vcDir.exists())
-        return QString();
-    if (!vcDir.cdUp())
-        return QString();
-    if (!vcDir.cdUp())
-        return QString();
-    if (!vcDir.cd("VC"))
-        return QString();
-    if (!vcDir.exists(VC_VARS_BAT_NAME))
-        return QString();
-    return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
-}
 }
 
 bool Settings::read(QString fname)
@@ -54,7 +35,7 @@ bool Settings::read(QString fname)
     auto workingDir = Files::absPath(rootObj["workingDir"].toString(this->workingDir().path));
     auto downloadsDir = Files::absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
-    outputPath = rootObj["outputPath"].toString(outputPath);
+    outputPath = Files::absPath(rootObj["outputPath"].toString(outputPath));
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
@@ -105,7 +86,7 @@ void Settings::write(QString fname)
     rootObj["workingDir"] = dir.relativeFilePath(workingDir().path);
     rootObj["downloadsDir"] = dir.relativeFilePath(downloadsDir().path);
     rootObj["vcVarsPath"] = vcVarsPath;
-    rootObj["outputPath"] = outputPath;
+    rootObj["outputPath"] = dir.relativeFilePath(outputPath);
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
@@ -175,4 +156,23 @@ Settings& Settings::instance()
 {
     static Settings settings;
     return settings;
+}
+
+QString Settings::extractVCVarsPath()
+{
+    auto env = QProcessEnvironment::systemEnvironment();
+    if (!env.contains(MSVC_2010_TOOLS_KEY))
+        return QString();
+    QDir vcDir(env.value(MSVC_2010_TOOLS_KEY));
+    if (!vcDir.exists())
+        return QString();
+    if (!vcDir.cdUp())
+        return QString();
+    if (!vcDir.cdUp())
+        return QString();
+    if (!vcDir.cd("VC"))
+        return QString();
+    if (!vcDir.exists(VC_VARS_BAT_NAME))
+        return QString();
+    return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
 }

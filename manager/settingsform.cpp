@@ -127,6 +127,7 @@ void SettingsForm::on_acceptButton_clicked()
 {
     Settings::instance() = get();
     Settings::instance().write(SETTINGS_FILE_NAME);
+    mainWindow->updateAll();
 }
 
 void SettingsForm::on_cancelButton_clicked()
@@ -230,5 +231,5 @@ void SettingsForm::on_chooseVCVarsPath_clicked()
 
 void SettingsForm::on_updateButton_clicked()
 {
-    mainWindow->update();
+    mainWindow->updateAll();
 }

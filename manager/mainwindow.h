@@ -2,14 +2,19 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "aboutwindow.h"
-#include "settingsform.h"
-#include "librariesform.h"
-#include "appsform.h"
+#include "library.h"
+#include "app.h"
 
 namespace Ui {
 class MainWindow;
 }
+
+struct Settings;
+class AboutWindow;
+class MainTabForm;
+class SettingsForm;
+class LibrariesForm;
+class AppsForm;
 
 class MainWindow : public QMainWindow
 {
@@ -19,10 +24,14 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void update(const Settings& curSettings);
+    void updateAll(const Settings& curSettings);
+
+    SettingsForm* settingsForm() const;
+    LibrariesForm* librariesForm() const;
+    AppsForm* appsForm() const;
 
 public slots:
-    void update();
+    void updateAll();
     void updateLibrarySources();
     void updateAppSources();
 
@@ -38,6 +47,7 @@ private:
 
     Ui::MainWindow *ui;
     AboutWindow* about;
+    MainTabForm* mainTab;
     SettingsForm* settings;
     LibrariesForm* libraries;
     AppsForm* apps;

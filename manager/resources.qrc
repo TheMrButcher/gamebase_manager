@@ -15,5 +15,6 @@
         <file>images/icons/Empty.png</file>
         <file>scripts/compile.bat</file>
         <file>images/icons/NotConfigured.png</file>
+        <file>images/icons/Warning.png</file>
     </qresource>
 </RCC>

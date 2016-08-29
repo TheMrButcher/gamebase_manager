@@ -25,6 +25,12 @@ public:
 
     void clearAppsTable();
     void append(const QList<App>& apps);
+    void reconfigurateAll();
+    void addApp(App app);
+
+signals:
+    void addedApp(const App& app, bool success);
+    void removedApp(const App& app);
 
 private slots:
     void onAppAdded(App app);

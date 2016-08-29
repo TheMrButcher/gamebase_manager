@@ -68,14 +68,46 @@ void AppsForm::append(const QList<App>& apps)
         appsModel->append(app);
 }
 
+void AppsForm::reconfigurateAll()
+{
+    const auto& apps = appsModel->get();
+    QList<App> updatedApps;
+    updatedApps.reserve(apps.size());
+    foreach (auto app, apps) {
+        app.copyConfig();
+        app.validate();
+        updatedApps.append(app);
+    }
+    appsModel->set(updatedApps);
+}
+
+void AppsForm::addApp(App app)
+{
+    auto workingDir = Settings::instance().workingDir();
+    if (workingDir.check() != SourceStatus::OK) {
+        auto answer = QMessageBox::question(this, "Создание рабочей папки",
+                                            "Рабочая папка отсутствует. Создать?");
+        if (answer != QMessageBox::Yes)
+            return;
+        QDir dir;
+        dir.mkpath(workingDir.path);
+        if (workingDir.check() != SourceStatus::OK)
+            return;
+    }
+
+    AppSourceManagerList::instance()->addToWorkingDir(app);
+}
+
 void AppsForm::onAppAdded(App app)
 {
-    if (!app.exists())
+    if (!app.validate()) {
+        emit addedApp(app, false);
         return;
+    }
     if (app.checkAbility(App::Configure))
         app.configurate();
-    app.validate();
     appsModel->append(app);
+    emit addedApp(app, true);
 }
 
 void AppsForm::onAppUpdate(App app)
@@ -83,11 +115,14 @@ void AppsForm::onAppUpdate(App app)
     App newApp = app;
     newApp.validate();
     appsModel->replace(app.source, app.containerName, newApp);
+    emit addedApp(newApp, true);
 }
 
 void AppsForm::onAppRename(App oldApp, App newApp)
 {
     appsModel->replace(oldApp.source, oldApp.containerName, newApp);
+    emit removedApp(oldApp);
+    emit addedApp(newApp, true);
 }
 
 void AppsForm::onTempAppAdded(App app)
@@ -200,6 +235,7 @@ void AppsForm::on_createButton_clicked()
     app.configurate();
     app.validate();
     appsModel->append(app);
+    emit addedApp(app, true);
 }
 
 int AppsForm::selectedRow() const
@@ -219,6 +255,7 @@ void AppsForm::removeApp(App app)
     } else {
         dir.remove(app.containerName);
     }
+    emit removedApp(app);
 }
 
 void AppsForm::updateButtons()
@@ -317,20 +354,7 @@ void AppsForm::on_addButton_clicked()
     if (row == -1)
         return;
     App app = appsModel->get()[row];
-
-    auto workingDir = Settings::instance().workingDir();
-    if (workingDir.check() != SourceStatus::OK) {
-        auto answer = QMessageBox::question(this, "Создание рабочей папки",
-                                            "Рабочая папка отсутствует. Создать?");
-        if (answer != QMessageBox::Yes)
-            return;
-        QDir dir;
-        dir.mkpath(workingDir.path);
-        if (workingDir.check() != SourceStatus::OK)
-            return;
-    }
-
-    AppSourceManagerList::instance()->addToWorkingDir(app);
+    addApp(app);
 }
 
 void AppsForm::on_deployButton_clicked()

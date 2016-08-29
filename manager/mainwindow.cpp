@@ -1,5 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "aboutwindow.h"
+#include "maintabform.h"
+#include "settingsform.h"
+#include "librariesform.h"
+#include "appsform.h"
 #include "settings.h"
 #include "librarysourcemanagerlist.h"
 #include "appsourcemanagerlist.h"
@@ -53,12 +58,12 @@ MainWindow::MainWindow(QWidget *parent) :
     apps = new AppsForm(this);
     ui->appsLayout->addWidget(apps);
 
-    librarySourceManagers->set(Settings::instance().librarySources);
-    librarySourceManagers->fastUpdate();
-    appSourceManagers->set(Settings::instance().appSources);
-    appSourceManagers->update();
-
     progressManager = new ProgressManager(this);
+
+    mainTab = new MainTabForm(this);
+    ui->mainTabLayout->addWidget(mainTab);
+
+    updateAll();
 }
 
 MainWindow::~MainWindow()
@@ -66,15 +71,31 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::update(const Settings& curSettings)
+void MainWindow::updateAll(const Settings& curSettings)
 {
+    mainTab->updateState();
     updateLibrarySources(curSettings);
     updateAppSources(curSettings);
 }
 
-void MainWindow::update()
+SettingsForm*MainWindow::settingsForm() const
 {
-    update(Settings::instance());
+    return settings;
+}
+
+LibrariesForm* MainWindow::librariesForm() const
+{
+    return libraries;
+}
+
+AppsForm* MainWindow::appsForm() const
+{
+    return apps;
+}
+
+void MainWindow::updateAll()
+{
+    updateAll(Settings::instance());
 }
 
 void MainWindow::updateLibrarySources()

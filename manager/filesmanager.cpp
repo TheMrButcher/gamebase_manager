@@ -209,9 +209,14 @@ bool FilesManager::run()
 
         switch (op.type) {
         case OpDesc::Remove:
-            ok = ok && rootDir.remove(op.srcPath);
+        {
+            QFile file(rootDir.absoluteFilePath(op.srcPath));
+            ok = ok && file.remove();
+            if (!ok)
+                qDebug() << "Error removing file: " << op.srcPath << ", message: " << file.errorString();
             ++processedOps;
             break;
+        }
 
         case OpDesc::RemoveDir:
             ok = ok && rootDir.rmdir(op.srcPath);
@@ -315,8 +320,8 @@ void FilesManager::removeDir(QString path)
     QDir dir = rootDir;
     if (!dir.cd(path))
         return;
-    auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-    foreach (const auto& entry, entries) {
+    auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+    foreach (auto entry, entries) {
         auto name = entry.fileName();
         auto filePath = dir.absoluteFilePath(name);
         if (entry.isDir()) {

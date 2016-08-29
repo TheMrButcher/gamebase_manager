@@ -86,7 +86,6 @@ uint qHash(const App& app, uint seed)
 
 bool App::validate()
 {
-    App expected = *this;
     *this = fromFileSystem(source, containerName);
     return exists();
 }
@@ -268,6 +267,8 @@ bool App::configurate()
         else
             isAllOK = false;
     }
+    if (isAllOK)
+        state = Full;
     return isAllOK;
 }
 

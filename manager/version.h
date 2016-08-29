@@ -19,6 +19,8 @@ public:
 };
 
 bool operator==(const Version& v1, const Version& v2);
+bool operator!=(const Version& v1, const Version& v2);
 bool operator<(const Version& v1, const Version& v2);
+bool operator<=(const Version& v1, const Version& v2);
 
 #endif // VERSION_H

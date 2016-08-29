@@ -1,6 +1,7 @@
 #include "compiler.h"
 #include "progressmanager.h"
 #include "settings.h"
+#include "files.h"
 #include <QFile>
 #include <QProcess>
 #include <QProcessEnvironment>
@@ -25,7 +26,7 @@ bool Compiler::compile(QDir projectDir, QString projectName)
 {
     ProgressManager::invokeShow("Построение...", "");
     ProgressManager::invokeSetLabel("Идет построение...");
-    QFile::copy(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
+    Files::copyTextFile(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
     auto result = compileImpl(projectDir, projectName);
     projectDir.remove(COMPILATION_BATCH_NAME);
     if (static_cast<int>(cancelFlag) == 0) {

@@ -2,6 +2,7 @@
 #include "ui_librariesform.h"
 #include "settings.h"
 #include "mainwindow.h"
+#include "appsform.h"
 #include "librarysourcemanagerlist.h"
 #include "librarydeployer.h"
 #include "libraryremover.h"
@@ -10,9 +11,10 @@
 #include <QThreadPool>
 #include <QDebug>
 
-LibrariesForm::LibrariesForm(MainWindow *parent) :
-    QWidget(parent),
-    ui(new Ui::LibrariesForm)
+LibrariesForm::LibrariesForm(MainWindow *parent)
+    : QWidget(parent)
+    , ui(new Ui::LibrariesForm)
+    , parent(parent)
 {
     ui->setupUi(this);
 
@@ -77,15 +79,21 @@ void LibrariesForm::download(Library library)
 
 void LibrariesForm::install(Library library)
 {
+    srcLibToInstall = library;
+    installImpl(library);
+}
+
+void LibrariesForm::installImpl(Library library)
+{
     toInstall = Library::makeAbsent();
     if (!library.checkAbility(Library::Install))
-        return;
+        return finishInstall(false);
     if (library.state == Library::SourceCode) {
         if (Settings::instance().vcVarsPath.isEmpty()) {
             QMessageBox::warning(this, "Не указан путь к vcvarsall.bat",
                                  "Для компиляции кода необходим Microsoft Visual Studio 2010. "
                                  "Пожалуйста, укажите путь к файлу vcvarsall.bat.");
-            return;
+            return finishInstall(false);
         }
     }
     if (library.checkAbility(Library::Deploy)) {
@@ -94,11 +102,15 @@ void LibrariesForm::install(Library library)
             auto answer = QMessageBox::question(this, "Создание рабочей папки",
                                                 "Рабочая папка отсутствует. Создать?");
             if (answer != QMessageBox::Yes)
-                return;
+                return finishInstall(false);
             QDir dir;
             dir.mkpath(resultLibrary.source.path);
-            if (resultLibrary.source.check() != SourceStatus::OK)
-                return;
+            if (resultLibrary.source.check() != SourceStatus::OK) {
+                QMessageBox::warning(this, "Не удалось создать рабочую папку",
+                                     "Невозможно создать рабочую папку. Проверьте, правильно "
+                                     "ли указан путь в настройках.");
+                return finishInstall(false);
+            }
         }
 
         if (LibraryRemover::checkHasDeployedFiles(resultLibrary.source.path)) {
@@ -122,20 +134,41 @@ void LibrariesForm::install(Library library)
     }
 }
 
+void LibrariesForm::finishInstall(bool success)
+{
+    auto library = srcLibToInstall;
+    toInstall = Library::makeAbsent();
+    srcLibToInstall = Library::makeAbsent();
+    emit finishedInstall(library, success);
+}
+
 void LibrariesForm::onLibraryDeployed(Library library)
 {
-    if (!library.validate())
-        qDebug() << "Failed to deploy library";
+    if (!library.validate()) {
+        QMessageBox::warning(this, "Ошибка при установке библиотеки",
+                             "Не удалось установить выбранную библиотеку в "
+                             "качестве текущей рабочей библиотеки.");
+        return finishInstall(false);
+    }
     librariesModel->append(library);
+    parent->appsForm()->reconfigurateAll();
+    return finishInstall(true);
 }
 
 void LibrariesForm::onLibraryRemoved(Library library)
 {
+    emit finishedRemove(library);
     if (toInstall.exists()
         && library.source.type == LibrarySource::WorkingDirectory
         && waitedInstallAction == Library::Remove) {
-        if (!LibraryRemover::checkHasDeployedFiles(Settings::instance().workingDir().path))
-            install(toInstall);
+        if (!LibraryRemover::checkHasDeployedFiles(Settings::instance().workingDir().path)) {
+            installImpl(toInstall);
+        } else {
+            QMessageBox::warning(this, "Ошибка при удалении библиотеки",
+                                 "Не удалось удалить текущую рабочую библиотеку, чтобы "
+                                 "освободить место для новой библиотеки.");
+            return finishInstall(false);
+        }
     }
 }
 
@@ -144,15 +177,17 @@ void LibrariesForm::onLibraryDownloaded(Library library)
     hasActiveDownload = false;
     bool waitedToInstall =
             toInstall == library && waitedInstallAction == Library::Download;
-    if (waitedToInstall)
-        toInstall = Library::makeAbsent();
     if (!library.validate()) {
-        qDebug() << "Failed to download library";
+        QMessageBox::warning(this, "Ошибка при скачивании библиотеки",
+                             "Не удалось скачать библиотеку. Возможно, источник библиотеки"
+                             "временно недоступен, либо библиотека была удалена из источника.");
+        if (waitedToInstall)
+            finishInstall(false);
         return;
     }
     librariesModel->append(library);
     if (waitedToInstall)
-        install(library);
+        installImpl(library);
     updateButtons();
 }
 

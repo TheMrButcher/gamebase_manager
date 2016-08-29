@@ -62,6 +62,11 @@ inline operator==(const App& app1, const App& app2)
             && app1.containerName == app2.containerName;
 }
 
+inline operator!=(const App& app1, const App& app2)
+{
+    return !(app1 == app2);
+}
+
 uint qHash(const App& app, uint seed);
 
 #endif // APP_H
