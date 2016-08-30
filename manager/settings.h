@@ -23,6 +23,7 @@ public:
     QList<AppSource> appSources;
     QString vcVarsPath;
     QString outputPath;
+    bool isFirstUsage;
 };
 
 #endif // SETTINGS_H

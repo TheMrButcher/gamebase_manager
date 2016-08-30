@@ -57,7 +57,8 @@ SOURCES += main.cpp\
     appdeployer.cpp \
     compiler.cpp \
     appdeploysuccessdialog.cpp \
-    maintabform.cpp
+    maintabform.cpp \
+    firstusagedialog.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -99,7 +100,8 @@ HEADERS  += mainwindow.h \
     appdeployer.h \
     compiler.h \
     appdeploysuccessdialog.h \
-    maintabform.h
+    maintabform.h \
+    firstusagedialog.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
@@ -110,7 +112,8 @@ FORMS    += mainwindow.ui \
     newappdialog.ui \
     appcompressiondialog.ui \
     appdeploysuccessdialog.ui \
-    maintabform.ui
+    maintabform.ui \
+    firstusagedialog.ui
 
 RESOURCES += \
     resources.qrc

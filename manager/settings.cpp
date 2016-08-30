@@ -36,6 +36,7 @@ bool Settings::read(QString fname)
     auto downloadsDir = Files::absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
     outputPath = Files::absPath(rootObj["outputPath"].toString(outputPath));
+    isFirstUsage = rootObj["isFirstUsage"].toBool(false);
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
@@ -87,6 +88,7 @@ void Settings::write(QString fname)
     rootObj["downloadsDir"] = dir.relativeFilePath(downloadsDir().path);
     rootObj["vcVarsPath"] = vcVarsPath;
     rootObj["outputPath"] = dir.relativeFilePath(outputPath);
+    rootObj["isFirstUsage"] = false;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
@@ -149,7 +151,7 @@ Settings Settings::defaultValue()
     appSources.append(AppSource{ AppSource::WorkingDirectory, workingPath, SourceStatus::Unknown });
 
     QString outputPath = QDir().absoluteFilePath(DEFAULT_OUTPUT_DIR);
-    return Settings{ librarySources, appSources, extractVCVarsPath(), outputPath };
+    return Settings{ librarySources, appSources, extractVCVarsPath(), outputPath, true };
 }
 
 Settings& Settings::instance()

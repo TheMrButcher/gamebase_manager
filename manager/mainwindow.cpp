@@ -4,6 +4,7 @@
 #include "maintabform.h"
 #include "settingsform.h"
 #include "librariesform.h"
+#include "firstusagedialog.h"
 #include "appsform.h"
 #include "settings.h"
 #include "librarysourcemanagerlist.h"
@@ -51,6 +52,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new SettingsForm(this);
     ui->settingsLayout->addWidget(settings);
+
+    if (Settings::instance().isFirstUsage) {
+        FirstUsageDialog* dialog = new FirstUsageDialog(this);
+        dialog->show();
+    }
 
     libraries = new LibrariesForm(this);
     ui->librariesLayout->addWidget(libraries);

@@ -2,6 +2,7 @@
 #define APPSFORM_H
 
 #include "appstablemodel.h"
+#include "library.h"
 #include <QWidget>
 
 namespace Ui {
@@ -38,6 +39,7 @@ private slots:
     void onAppRename(App oldApp, App newApp);
     void onTempAppAdded(App app);
     void onAppDeployed(App app, QString path, bool success);
+    void onLibraryRemoved(Library library);
 
     void onAppsSelectionChanged(const QItemSelection &, const QItemSelection &);
 

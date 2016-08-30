@@ -36,6 +36,9 @@ SettingsForm::SettingsForm(MainWindow* parent) :
         Settings::instance().write(SETTINGS_FILE_NAME);
     }
 
+    if (Settings::instance().isFirstUsage)
+        Settings::instance().write(SETTINGS_FILE_NAME);
+
     set(Settings::instance());
 
     connect(ui->gamebaseSources->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),

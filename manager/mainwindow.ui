@@ -24,7 +24,7 @@
         </property>
         <widget class="QWidget" name="mainTab">
          <attribute name="title">
-          <string>Главная</string>
+          <string>Основное</string>
          </attribute>
          <layout class="QGridLayout" name="mainTabLayout"/>
         </widget>

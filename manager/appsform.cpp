@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "files.h"
 #include "mainwindow.h"
+#include "librariesform.h"
 #include "appsourcemanagerlist.h"
 #include "newappdialog.h"
 #include "appconfigurationdialog.h"
@@ -49,6 +50,8 @@ AppsForm::AppsForm(MainWindow *parent) :
 
     connect(configDialog, SIGNAL(appUpdated(App)), this, SLOT(onAppUpdate(App)));
     connect(configDialog, SIGNAL(appRenamed(App,App)), this, SLOT(onAppRename(App,App)));
+    connect(parent->librariesForm(), SIGNAL(finishedRemove(Library)),
+            this, SLOT(onLibraryRemoved(Library)));
 }
 
 AppsForm::~AppsForm()
@@ -170,6 +173,20 @@ void AppsForm::onAppDeployed(App app, QString path, bool success)
                              "Произошла ошибка при построении приложения. "
                              "Проверьте, что приложение правильно сконфигурирвано "
                              "и может быть скомпилировано на данном компьютере.");
+    }
+}
+
+void AppsForm::onLibraryRemoved(Library library)
+{
+    if (library.source.type == LibrarySource::WorkingDirectory) {
+        const auto& apps = appsModel->get();
+        QList<App> updatedApps;
+        updatedApps.reserve(apps.size());
+        foreach (auto app, apps) {
+            app.validate();
+            updatedApps.append(app);
+        }
+        appsModel->set(updatedApps);
     }
 }
 

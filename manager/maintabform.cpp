@@ -465,9 +465,9 @@ void MainTabForm::onAppSourceUpdate(AppSource source, const QList<App>& newApps)
                 }
             } else {
                 bool isNewVersion = true;
-                if (appInfo.cur.exists() && app.version < appInfo.cur.version)
+                if (appInfo.cur.exists() && app.version <= appInfo.cur.version)
                     isNewVersion = false;
-                if (appInfo.latest.exists() && app.version < appInfo.latest.version)
+                if (appInfo.latest.exists() && app.version <= appInfo.latest.version)
                     isNewVersion = false;
                 if (isNewVersion) {
                     appInfo.latest = app;

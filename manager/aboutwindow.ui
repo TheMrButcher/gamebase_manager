@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>О программе</string>
   </property>
   <property name="layoutDirection">
    <enum>Qt::LeftToRight</enum>
@@ -75,7 +75,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="text">
-        <string>Gamebase Manager распространяется под лицензией MIT</string>
+        <string>Gamebase Manager распространяется по лицензии MIT</string>
        </property>
        <property name="wordWrap">
         <bool>false</bool>
