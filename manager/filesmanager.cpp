@@ -94,15 +94,15 @@ void FilesManager::remove(QString path)
     QFileInfo info(rootDir, path);
     if (!info.exists())
         return;
+    QString absPath = rootDir.absoluteFilePath(path);
     if (info.isDir()) {
-        removeDir(path);
+        removeDir(absPath);
         return;
     }
     if (info.isFile()) {
-        removeFile(path);
+        removeFile(absPath);
         return;
     }
-    ok = false;
 }
 
 void FilesManager::unarchive(QString archivePath, QString dstPath)
@@ -210,8 +210,19 @@ bool FilesManager::run()
         switch (op.type) {
         case OpDesc::Remove:
         {
-            QFile file(rootDir.absoluteFilePath(op.srcPath));
-            ok = ok && file.remove();
+            QFile file(op.srcPath);
+            bool removed = false;
+            for (int i = 0; i < 3; ++i) {
+                if (!file.exists()) {
+                    removed = true;
+                    break;
+                }
+                if (file.remove()) {
+                    removed = true;
+                    break;
+                }
+            }
+            ok = ok && removed;
             if (!ok)
                 qDebug() << "Error removing file: " << op.srcPath << ", message: " << file.errorString();
             ++processedOps;
@@ -219,9 +230,35 @@ bool FilesManager::run()
         }
 
         case OpDesc::RemoveDir:
-            ok = ok && rootDir.rmdir(op.srcPath);
+        {
+            QDir dir(op.srcPath);
+            bool removed = false;
+            for (int i = 0; i < 3; ++i) {
+                if (!dir.exists()) {
+                    removed = true;
+                    break;
+                }
+                if (rootDir.rmdir(op.srcPath)) {
+                    removed = true;
+                    break;
+                }
+
+                // last try...
+                auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
+                foreach (auto entry, entries) {
+                    auto name = entry.fileName();
+                    if (entry.isDir()) {
+                        auto dirPath = dir.absoluteFilePath(name);
+                        rootDir.rmdir(dirPath);
+                    } else {
+                        dir.remove(name);
+                    }
+                }
+            }
+            ok = ok && removed;
             ++processedOps;
             break;
+        }
 
         case OpDesc::StartUnarchive:
             curArchive = op.srcPath;
