@@ -96,6 +96,7 @@ void AppConfigurationDialog::set(App app, const AppConfig& config)
 void AppConfigurationDialog::update()
 {
     auto app = resultApp();
+    app.setConfig(resultConfig());
     app.configurate();
     emit appUpdated(app);
     updateStatuses(app);
@@ -138,5 +139,5 @@ void AppConfigurationDialog::on_chooseDesignPathButton_clicked()
     QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке с дизайном",
                                                      Settings::instance().workingDir().path);
     if (!path.isEmpty())
-        ui->imagesPath->setText(path);
+        ui->designPath->setText(path);
 }
