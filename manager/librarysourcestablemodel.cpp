@@ -65,7 +65,6 @@ QVariant LibrarySourcesTableModel::data(const QModelIndex& index, int role) cons
             switch (sources[index.row()].type) {
             case LibrarySource::Server: return QIcon(":/images/icons/Web.png");
             case LibrarySource::Directory: return QIcon(":/images/icons/Folder.png");
-            case LibrarySource::DownloadsDirectory: return QIcon(":/images/icons/Download.png");
             default: return QVariant();
             }
         } else if (index.column() == 2){
@@ -79,6 +78,23 @@ QVariant LibrarySourcesTableModel::data(const QModelIndex& index, int role) cons
     } else if (role == Qt::EditRole) {
         if (index.column() == 1) {
             return sources[index.row()].path;
+        }
+    } else if (role == Qt::ToolTipRole) {
+        switch (index.column()) {
+        case 0:
+            switch (sources[index.row()].type) {
+            case LibrarySource::Server: return "Сервер";
+            case LibrarySource::Directory: return "Папка";
+            default: return QVariant();
+            }
+        case 1: return sources[index.row()].path;
+        case 2:
+            switch (sources[index.row()].status) {
+            case SourceStatus::Unknown: return "Статус неизвестен";
+            case SourceStatus::OK: return "Есть доступ";
+            case SourceStatus::Broken: return "Нет доступа";
+            default: return QVariant();
+            }
         }
     }
     return QVariant();

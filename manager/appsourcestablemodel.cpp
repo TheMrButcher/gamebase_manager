@@ -73,6 +73,17 @@ QVariant AppSourcesTableModel::data(const QModelIndex& index, int role) const
         if (index.column() == 0) {
             return sources[index.row()].path;
         }
+    } else if (role == Qt::ToolTipRole) {
+        switch (index.column()) {
+        case 0: return sources[index.row()].path;
+        case 1:
+            switch (sources[index.row()].status) {
+            case SourceStatus::Unknown: return "Статус неизвестен";
+            case SourceStatus::OK: return "Есть доступ";
+            case SourceStatus::Broken: return "Нет доступа";
+            default: return QVariant();
+            }
+        }
     }
     return QVariant();
 }

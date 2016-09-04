@@ -106,6 +106,21 @@ QVariant AppsTableModel::data(const QModelIndex& index, int role) const
             default: return QVariant();
             }
         }
+    } else if (role == Qt::ToolTipRole) {
+        switch (index.column()) {
+        case 0: return app.source.path;
+        case 1: return app.name;
+        case 2: return app.containerName;
+        case 3: return app.version.toString();
+        case 4:
+            switch (app.state) {
+            case App::Archived: return "Сжатое приложение";
+            case App::NotConfigured: return "Требуется настройка";
+            case App::Full: return "Полностью настроено";
+            default: return QVariant();
+            }
+        default: break;
+        }
     }
     return QVariant();
 }

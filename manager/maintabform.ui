@@ -45,15 +45,21 @@
      </item>
      <item>
       <widget class="QPushButton" name="updateStateButton">
-       <property name="text">
+       <property name="toolTip">
         <string>Обновить состояние</string>
+       </property>
+       <property name="text">
+        <string>Обновить</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="installAllButton">
-       <property name="text">
+       <property name="toolTip">
         <string>Установить все</string>
+       </property>
+       <property name="text">
+        <string>Установить</string>
        </property>
       </widget>
      </item>

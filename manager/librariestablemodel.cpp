@@ -107,6 +107,29 @@ QVariant LibrariesTableModel::data(const QModelIndex& index, int role) const
             default: return QVariant();
             }
         }
+    } else if (role == Qt::ToolTipRole) {
+        switch (index.column()) {
+        case 0:
+            switch (library.source.type) {
+            case LibrarySource::Server: return "Сервер";
+            case LibrarySource::Directory: return "Папка";
+            case LibrarySource::WorkingDirectory: return "Рабочая папка";
+            case LibrarySource::DownloadsDirectory: return "Папка для загрузок";
+            default: return QVariant();
+            }
+        case 1: return library.source.path;
+        case 2: return library.archiveName;
+        case 3: return library.version.toString();
+        case 4:
+            switch (library.state) {
+            case Library::Absent: return "Отсутствует";
+            case Library::SourceCode: return "Требуется компиляция";
+            case Library::BinaryArchive: return "Архив с построенным пакетом";
+            case Library::Deployed: return "Установлен";
+            default: return QVariant();
+            }
+        default: break;
+        }
     }
     return QVariant();
 }

@@ -32,6 +32,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="chooseWorkingDir">
+       <property name="toolTip">
+        <string>Указать рабочую папку</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -61,12 +64,15 @@
      <item>
       <widget class="QLineEdit" name="downloadsDir">
        <property name="statusTip">
-        <string>Путь к рабочей папке, в которой будут развернуты библиотека gamebase и использующие ее приложения</string>
+        <string>Путь к папке для загрузок, в которой будут складываться все загруженные версии библиотеки</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="chooseDownloadsDir">
+       <property name="toolTip">
+        <string>Указать папку для загрузок</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -94,10 +100,17 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="outputDir"/>
+      <widget class="QLineEdit" name="outputDir">
+       <property name="statusTip">
+        <string>Путь к папке, в которую будут складываться все построенные приложения</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QToolButton" name="chooseOutputDir">
+       <property name="toolTip">
+        <string>Указать папку для построенных приложений</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -127,12 +140,15 @@
      <item>
       <widget class="QLineEdit" name="vcVarsPath">
        <property name="statusTip">
-        <string>Путь к рабочей папке, в которой будут развернуты библиотека gamebase и использующие ее приложения</string>
+        <string>Путь к vcvarsall.bat, входящем в состав Microsoft Visual Studio. Необходим для построения библиотеки из ивходников и приложений</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="chooseVCVarsPath">
+       <property name="toolTip">
+        <string>Указать путь к vcvarsall.bat</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -184,6 +200,9 @@
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
            <widget class="QPushButton" name="addGamebaseServerButton">
+            <property name="toolTip">
+             <string>Добавить сервер-источник</string>
+            </property>
             <property name="statusTip">
              <string>Добавить сервер, на котором будут появляться новые версии библиотеки gamebase</string>
             </property>
@@ -194,6 +213,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="addGamebaseDirectoryButton">
+            <property name="toolTip">
+             <string>Добавить папку-источник</string>
+            </property>
             <property name="statusTip">
              <string>Добавить папку, в которой будут появляться новые версии библиотеки gamebase</string>
             </property>
@@ -207,8 +229,11 @@
             <property name="enabled">
              <bool>false</bool>
             </property>
+            <property name="toolTip">
+             <string>Удалить выбранный источник</string>
+            </property>
             <property name="statusTip">
-             <string>Удалить выбранный источник библиотеки gamebase</string>
+             <string/>
             </property>
             <property name="text">
              <string>Удалить</string>
@@ -256,6 +281,9 @@
          <layout class="QVBoxLayout" name="verticalLayout_13">
           <item>
            <widget class="QPushButton" name="addAppDirectoryButton">
+            <property name="toolTip">
+             <string>Добавить папку-источник</string>
+            </property>
             <property name="statusTip">
              <string>Добавить папку, в которой будут появляться новые приложения, использующие gamebase</string>
             </property>
@@ -269,8 +297,8 @@
             <property name="enabled">
              <bool>false</bool>
             </property>
-            <property name="statusTip">
-             <string>Удалить выделенный источник приложений</string>
+            <property name="toolTip">
+             <string>Удалить выбранный источник</string>
             </property>
             <property name="text">
              <string>Удалить</string>
@@ -301,8 +329,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="acceptButton">
+       <property name="toolTip">
+        <string>Применить изменения</string>
+       </property>
        <property name="statusTip">
-        <string>Применить изменения в настройках</string>
+        <string/>
        </property>
        <property name="text">
         <string>Применить</string>
@@ -311,6 +342,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="updateButton">
+       <property name="toolTip">
+        <string>Обновить состояние</string>
+       </property>
        <property name="text">
         <string>Обновить</string>
        </property>
@@ -318,8 +352,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Сбросить изменения</string>
+       </property>
        <property name="statusTip">
-        <string>Сбросить изменения в настройках</string>
+        <string/>
        </property>
        <property name="text">
         <string>Отмена</string>

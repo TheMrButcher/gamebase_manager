@@ -233,14 +233,31 @@ QPushButton* MainTabForm::addRow(int row, MainTabForm::FeatureStatus status, QSt
 {
     QLabel* statusLabel = new QLabel();
     QPixmap image;
+    QString toolTipLabel;
     switch (status) {
-    case Unknown: image = QPixmap(":/images/icons/Help.png"); break;
-    case Error: image = QPixmap(":/images/icons/Error.png"); break;
-    case Warning: image = QPixmap(":/images/icons/Warning.png"); break;
-    case OK: image = QPixmap(":/images/icons/Ok.png"); break;
-    default: image = QPixmap(":/images/icons/Help.png"); break;
+    case Unknown:
+        image = QPixmap(":/images/icons/Help.png");
+        toolTipLabel = "Неопределенное состояние";
+        break;
+    case Error:
+        image = QPixmap(":/images/icons/Error.png");
+        toolTipLabel = "Имеется проблема";
+        break;
+    case Warning:
+        image = QPixmap(":/images/icons/Warning.png");
+        toolTipLabel = "Несущественная проблема";
+        break;
+    case OK:
+        image = QPixmap(":/images/icons/Ok.png");
+        toolTipLabel = "Нормальное состояние";
+        break;
+    default:
+        image = QPixmap(":/images/icons/Help.png");
+        toolTipLabel = "Неизвестное состояние";
+        break;
     }
     statusLabel->setPixmap(image);
+    statusLabel->setToolTip(toolTipLabel);
     ui->stateLayout->addWidget(statusLabel, row, 0);
     stateWidgets.append(statusLabel);
 

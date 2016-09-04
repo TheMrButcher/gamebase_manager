@@ -24,7 +24,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="nameEdit"/>
+      <widget class="QLineEdit" name="nameEdit">
+       <property name="statusTip">
+        <string>Название архива (без расширения), в который будет запаковано приложение</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -38,6 +42,9 @@
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QListWidget" name="appDestinations">
+          <property name="statusTip">
+           <string>Список известных путей, содержащих приложения</string>
+          </property>
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -47,6 +54,12 @@
          <widget class="QPushButton" name="selectButton">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Выбрать из списка</string>
+          </property>
+          <property name="statusTip">
+           <string>Скопировать выделенный в списке пункт в поле &quot;Путь&quot;</string>
           </property>
           <property name="text">
            <string>Выбрать</string>
@@ -65,10 +78,17 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="pathEdit"/>
+         <widget class="QLineEdit" name="pathEdit">
+          <property name="statusTip">
+           <string>Путь, к папке, в которой будет сохранен архив с приложением</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QToolButton" name="setPathButton">
+          <property name="toolTip">
+           <string>Указать путь</string>
+          </property>
           <property name="text">
            <string>...</string>
           </property>

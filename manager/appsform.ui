@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>308</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,6 +46,12 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QPushButton" name="createButton">
+          <property name="toolTip">
+           <string>Создать новое приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Создает новый пустой проект</string>
+          </property>
           <property name="text">
            <string>Создать</string>
           </property>
@@ -55,6 +61,12 @@
          <widget class="QPushButton" name="configureButton">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Настроить выбранное приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Позволяет изменить имя, пути, версию и другие настройки приложения</string>
           </property>
           <property name="text">
            <string>Настроить</string>
@@ -66,6 +78,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+          <property name="statusTip">
+           <string>Открывает проект в Microsoft Visual Studio</string>
+          </property>
           <property name="text">
            <string>Открыть в MS Visual Studio</string>
           </property>
@@ -75,6 +93,9 @@
          <widget class="QPushButton" name="openDirButton">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="statusTip">
+           <string>Открывает папку, содержащую проект</string>
           </property>
           <property name="text">
            <string>Открыть папку</string>
@@ -86,6 +107,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Удалить выбранное приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Безвозвратно удаляет папку с проектом, а также относящиеся к нему файлы конфигурации</string>
+          </property>
           <property name="text">
            <string>Удалить</string>
           </property>
@@ -95,6 +122,12 @@
          <widget class="QPushButton" name="compressButton">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Сжать выбранное приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Создает архив с выбранным приложением. Временные файлы MSVC НЕ добавляются в архив</string>
           </property>
           <property name="text">
            <string>Сжать</string>
@@ -106,6 +139,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Добавить выбранное приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Копирует в рабочую папку и распаковывает (если нужно) выбранное приложение, подготавливает приложение к работе</string>
+          </property>
           <property name="text">
            <string>Добавить в рабочую папку</string>
           </property>
@@ -116,6 +155,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Построить выбранное приложение</string>
+          </property>
+          <property name="statusTip">
+           <string>Строит приложение, создает пакет и копирует в него все необходимые для его работы файлы (в том числе и библиотеки)</string>
+          </property>
           <property name="text">
            <string>Построить</string>
           </property>
@@ -123,6 +168,12 @@
         </item>
         <item>
          <widget class="QPushButton" name="updateButton">
+          <property name="toolTip">
+           <string>Обновить список</string>
+          </property>
+          <property name="statusTip">
+           <string>Обновляет состояние всех источников приложений и самих приложений</string>
+          </property>
           <property name="text">
            <string>Обновить</string>
           </property>

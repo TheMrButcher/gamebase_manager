@@ -49,6 +49,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Установить выбранную версию</string>
+          </property>
+          <property name="statusTip">
+           <string>Заменяет текущую рабочую версию библиотеку на выбранную</string>
+          </property>
           <property name="text">
            <string>Установить</string>
           </property>
@@ -58,6 +64,12 @@
          <widget class="QPushButton" name="downloadButton">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="toolTip">
+           <string>Скачать выбранную версию</string>
+          </property>
+          <property name="statusTip">
+           <string>Скачивает выбранную версию в папку для загрузок (если библиотека находится в файловой системе, то она будет просто скопирована)</string>
           </property>
           <property name="text">
            <string>Скачать</string>
@@ -69,6 +81,12 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
+          <property name="toolTip">
+           <string>Удалить выбранную версию</string>
+          </property>
+          <property name="statusTip">
+           <string>Удаляет выбранную версию библиотеки. Если выбрана рабочая версия, то необходимо установить новую версию библиотеки</string>
+          </property>
           <property name="text">
            <string>Удалить</string>
           </property>
@@ -76,6 +94,12 @@
         </item>
         <item>
          <widget class="QPushButton" name="updateButton">
+          <property name="toolTip">
+           <string>Обновить список</string>
+          </property>
+          <property name="statusTip">
+           <string>Обновляет состояние всех источников и библиотек в них</string>
+          </property>
           <property name="text">
            <string>Обновить</string>
           </property>

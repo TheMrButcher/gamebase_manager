@@ -27,6 +27,14 @@ App renameApp(App app, QString newName)
     newApp.configurate();
     return newApp;
 }
+
+void setStatus(QLabel* label, bool status)
+{
+    static QPixmap errorPixmap(":/images/icons/Error.png");
+    static QPixmap okPixmap(":/images/icons/Ok.png");
+    label->setPixmap(status ? okPixmap : errorPixmap);
+    label->setToolTip(status ? "В норме" : "Имеется проблема");
+}
 }
 
 AppConfigurationDialog::AppConfigurationDialog(QWidget *parent) :
@@ -118,12 +126,10 @@ void AppConfigurationDialog::updateStatuses(App app)
         hasManagerProject = dir.exists(Files::APP_PROJECT_NAME);
     }
 
-    QPixmap errorPixmap(":/images/icons/Error.png");
-    QPixmap okPixmap(":/images/icons/Ok.png");
-    ui->versionStatus->setPixmap(hasVersionFile ? okPixmap : errorPixmap);
-    ui->configStatus->setPixmap(hasConfig ? okPixmap : errorPixmap);
-    ui->mainCppStatus->setPixmap(isMainCppOK ? okPixmap : errorPixmap);
-    ui->managerProjectStatus->setPixmap(hasManagerProject ? okPixmap : errorPixmap);
+    setStatus(ui->versionStatus, hasVersionFile);
+    setStatus(ui->configStatus, hasConfig);
+    setStatus(ui->mainCppStatus, isMainCppOK);
+    setStatus(ui->managerProjectStatus, hasManagerProject);
 }
 
 void AppConfigurationDialog::on_chooseImagesPathButton_clicked()

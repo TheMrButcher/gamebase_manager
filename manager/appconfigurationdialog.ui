@@ -36,7 +36,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="nameEdit"/>
+         <widget class="QLineEdit" name="nameEdit">
+          <property name="statusTip">
+           <string>Название приложения. Если название изменено, необходимо нажать &quot;Применить&quot;, чтобы изменения вступили в силу</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -50,7 +54,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="versionEdit"/>
+         <widget class="QLineEdit" name="versionEdit">
+          <property name="statusTip">
+           <string>Текущая версия приложения</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -73,10 +81,17 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="imagesPath"/>
+         <widget class="QLineEdit" name="imagesPath">
+          <property name="statusTip">
+           <string>Путь, по которому приложение будет искать изображения</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QToolButton" name="chooseImagesPathButton">
+          <property name="toolTip">
+           <string>Указать путь к изображениям</string>
+          </property>
           <property name="text">
            <string>...</string>
           </property>
@@ -104,10 +119,17 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="designPath"/>
+         <widget class="QLineEdit" name="designPath">
+          <property name="statusTip">
+           <string>Путь, по которому приложение будет искать файлы дизайна</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QToolButton" name="chooseDesignPathButton">
+          <property name="toolTip">
+           <string>Указать путь к дизайну</string>
+          </property>
           <property name="text">
            <string>...</string>
           </property>
