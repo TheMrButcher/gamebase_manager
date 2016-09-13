@@ -1,0 +1,14 @@
+{
+    "appSources": [
+    ],
+    "downloadsDir": "../downloads",
+    "isFirstUsage": true,
+    "librarySources": [
+        {
+            "path": "https://github.com/TheMrButcher/gamebase",
+            "type": "server"
+        }
+    ],
+    "outputPath": "../output",
+    "workingDir": ".."
+}
