@@ -3,6 +3,7 @@ Name "Gamebase Manager"
 OutFile "InstallGamebaseManager.exe"
 LicenseData "manager\LICENSE.txt"
 InstallDir "C:\MyPrograms\"
+AutoCloseWindow true
 
 Page license
 Page directory
@@ -16,4 +17,5 @@ Section "Installation"
   File /R "manager"
   SetOutPath "$INSTDIR\manager"
   CreateShortcut "$INSTDIR\Manager.lnk" "$INSTDIR\manager\manager.exe"
+  ExecShell "open" "$INSTDIR"
 SectionEnd
