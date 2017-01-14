@@ -104,6 +104,7 @@ bool App::checkAbility(App::Ability ability) const
                 && source.type == AppSource::WorkingDirectory;
     case OpenSolution: return state == NotConfigured || state == Full;
     case OpenDirectory: return state != Absent;
+    case OpenEditor: return state == Full;
     default: break;
     }
     return false;

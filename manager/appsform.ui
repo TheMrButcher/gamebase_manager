@@ -103,6 +103,19 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="openEditorButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="statusTip">
+           <string>Открывает редактор дизайна, настроенный под выбранное приложение</string>
+          </property>
+          <property name="text">
+           <string>Открыть редактор дизайна</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="removeButton">
           <property name="enabled">
            <bool>false</bool>

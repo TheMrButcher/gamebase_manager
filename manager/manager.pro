@@ -58,7 +58,9 @@ SOURCES += main.cpp\
     compiler.cpp \
     appdeploysuccessdialog.cpp \
     maintabform.cpp \
-    firstusagedialog.cpp
+    firstusagedialog.cpp \
+    config.cpp \
+    editorconfig.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -101,7 +103,9 @@ HEADERS  += mainwindow.h \
     compiler.h \
     appdeploysuccessdialog.h \
     maintabform.h \
-    firstusagedialog.h
+    firstusagedialog.h \
+    config.h \
+    editorconfig.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

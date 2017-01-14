@@ -59,6 +59,8 @@ private slots:
 
     void on_openDirButton_clicked();
 
+    void on_openEditorButton_clicked();
+
 private:
     int selectedRow() const;
     void removeApp(App app);

@@ -29,7 +29,8 @@ public:
         Add,
         Deploy,
         OpenSolution,
-        OpenDirectory
+        OpenDirectory,
+        OpenEditor
     };
 
     bool validate();

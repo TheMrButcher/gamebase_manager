@@ -2,29 +2,10 @@
 #include "files.h"
 #include "settings.h"
 #include "librarysource.h"
-#include <QFile>
-#include <QTextStream>
-#include <QJsonDocument>
 #include <QJsonObject>
 
-namespace {
-
-QString absPathOr(QDir rootDir, QString value, QString defaultValue)
+bool AppConfig::readImpl(QDir rootDir)
 {
-    if (value.isEmpty())
-        return defaultValue;
-    return Files::absPath(rootDir, value);
-}
-
-}
-
-bool AppConfig::read(QDir rootDir, QString path)
-{
-    QFile srcFile(path);
-    if (!srcFile.open(QIODevice::ReadOnly))
-        return false;
-    QJsonDocument json = QJsonDocument::fromJson(srcFile.readAll());
-    rootObj = json.object();
     imagesPath = absPathOr(rootDir, rootObj["imagesPath"].toString(), imagesPath);
     designPath = absPathOr(rootDir, rootObj["designPath"].toString(), designPath);
     shadersPath = absPathOr(rootDir, rootObj["shadersPath"].toString(), shadersPath);
@@ -37,13 +18,8 @@ bool AppConfig::read(QDir rootDir, QString path)
     return true;
 }
 
-bool AppConfig::write(QDir rootDir, QString path) const
+bool AppConfig::writeImpl(QDir rootDir, QJsonObject& newRootObj) const
 {
-    QFile dstFile(path);
-    if (!dstFile.open(QIODevice::WriteOnly | QIODevice::Text))
-        return false;
-
-    QJsonObject newRootObj = rootObj;
     newRootObj["imagesPath"] = rootDir.relativeFilePath(imagesPath);
     newRootObj["designPath"] = rootDir.relativeFilePath(designPath);
     newRootObj["shadersPath"] = rootDir.relativeFilePath(shadersPath);
@@ -51,9 +27,6 @@ bool AppConfig::write(QDir rootDir, QString path) const
     newRootObj["width"] = width;
     newRootObj["height"] = height;
     newRootObj["mode"] = isWindow ? QString("window") : QString("fullscreen");
-
-    QTextStream stream(&dstFile);
-    stream << QString::fromUtf8(QJsonDocument(newRootObj).toJson());
     return true;
 }
 

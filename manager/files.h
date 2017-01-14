@@ -23,6 +23,7 @@ public:
 
     static const QString EDITOR_LINK_NAME;
     static const QString EDITOR_PROJECT_NAME;
+    static const QString EDITOR_CONFIG_NAME;
 
     static const QString RESOURCES_DIR_NAME;
     static const QString DESIGNS_DIR_NAME;

@@ -1,11 +1,9 @@
 #ifndef APPCONFIG_H
 #define APPCONFIG_H
 
-#include <QString>
-#include <QDir>
-#include <QJsonObject>
+#include "config.h"
 
-class AppConfig {
+class AppConfig : public Config {
 public:
     QString imagesPath;
     QString designPath;
@@ -15,15 +13,13 @@ public:
     int height;
     bool isWindow;
 
-    bool read(QDir rootDir, QString path);
-    bool write(QDir rootDir, QString path) const;
-
     static AppConfig defaultConfig();
     static AppConfig makeDeployedAppConfig(
             QDir rootDir, const AppConfig& originConfig);
 
 private:
-    QJsonObject rootObj;
+    virtual bool readImpl(QDir rootDir) override;
+    virtual bool writeImpl(QDir rootDir, QJsonObject& newRootObj) const override;
 };
 
 #endif // APPCONFIG_H

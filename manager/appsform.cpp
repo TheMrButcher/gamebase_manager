@@ -12,6 +12,7 @@
 #include "appcompressor.h"
 #include "appdeployer.h"
 #include "appdeploysuccessdialog.h"
+#include "editorconfig.h"
 #include <QDir>
 #include <QFile>
 #include <QMessageBox>
@@ -19,6 +20,9 @@
 #include <QUrl>
 #include <QDesktopServices>
 #include <QThreadPool>
+#include <QProcess>
+
+#include <QDebug>
 
 AppsForm::AppsForm(MainWindow *parent) :
     QWidget(parent),
@@ -286,6 +290,7 @@ void AppsForm::updateButtons()
         ui->deployButton->setEnabled(false);
         ui->openSolutionButton->setEnabled(false);
         ui->openDirButton->setEnabled(false);
+        ui->openEditorButton->setEnabled(false);
     } else {
         const auto& app = appsModel->get()[row];
         ui->configureButton->setEnabled(app.checkAbility(App::Configure));
@@ -295,6 +300,7 @@ void AppsForm::updateButtons()
         ui->deployButton->setEnabled(app.checkAbility(App::Deploy));
         ui->openSolutionButton->setEnabled(app.checkAbility(App::OpenSolution));
         ui->openDirButton->setEnabled(app.checkAbility(App::OpenDirectory));
+        ui->openEditorButton->setEnabled(app.checkAbility(App::OpenEditor));
     }
 }
 
@@ -425,4 +431,32 @@ void AppsForm::on_openDirButton_clicked()
     }
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+
+void AppsForm::on_openEditorButton_clicked()
+{
+    int row = selectedRow();
+    if (row == -1)
+        return;
+    App app = appsModel->get()[row];
+
+    auto& editorConfig = EditorConfig::instance();
+    if (editorConfig.isVirtual) {
+        QMessageBox::warning(this, "Отсутствует конфигурация редактора",
+                             "Конфигурация редактора дизайна не загружена. "
+                             "Обновите состояние и проверьте, установлена ли библиотека Gamebase.");
+        return;
+    }
+
+    auto appConfig = app.config();
+    editorConfig.designedObjectImagesPath = appConfig.imagesPath;
+    editorConfig.workingPath = appConfig.designPath;
+    if (!editorConfig.write()) {
+        QMessageBox::warning(this, "Ошибка при записи конфигурации",
+                             "Невозможно обновить конфигурацию редактора дизайна. "
+                             "Обновите состояние и проверьте, установлена ли библиотека Gamebase.");
+    }
+    qDebug() << "Starting " << EditorConfig::editorPath();
+    QProcess::startDetached(EditorConfig::editorPath(), QStringList(),
+                            EditorConfig::editorDir().absolutePath());
 }

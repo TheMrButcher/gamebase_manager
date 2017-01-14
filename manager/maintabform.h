@@ -34,6 +34,7 @@ private:
     QString nextAppToProcess();
     void deployApp(QString appName);
     void deployApps();
+    void updateEditorConfig();
 
     enum FeatureStatus {
         Unknown,

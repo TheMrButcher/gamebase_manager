@@ -7,6 +7,7 @@
 #include "appsform.h"
 #include "librarysourcemanagerlist.h"
 #include "appsourcemanagerlist.h"
+#include "editorconfig.h"
 #include <QMessageBox>
 #include <QPushButton>
 #include <QLabel>
@@ -42,6 +43,8 @@ MainTabForm::~MainTabForm()
 void MainTabForm::updateState()
 {
     curLib = Library::fromFileSystem(Settings::instance().workingDir());
+    if (curLib.exists())
+        updateEditorConfig();
     neededLib = Library::makeAbsent();
     apps.clear();
     action = Idle;
@@ -227,6 +230,14 @@ void MainTabForm::deployApps()
         return;
     }
     deployApp(appName);
+}
+
+void MainTabForm::updateEditorConfig()
+{
+    EditorConfig& config = EditorConfig::instance();
+    if (!config.isVirtual)
+        return;
+    config.read();
 }
 
 QPushButton* MainTabForm::addRow(int row, MainTabForm::FeatureStatus status, QString label, QString buttonLabel)
@@ -506,6 +517,7 @@ void MainTabForm::onLibraryDeployed(Library library, bool success)
 {
     if (success) {
         curLib = library;
+        updateEditorConfig();
         if (action == InstallLibrary)
             processNextAction();
     } else {
