@@ -235,13 +235,17 @@ void AppsForm::on_createButton_clicked()
     auto dstDir = dir;
     dstDir.cd(containerName);
 
-    QString mainCppSourcePath;
-    if (newAppDialog->useSources())
-        mainCppSourcePath = QDir().absoluteFilePath(newAppDialog->sourcesPath());
-    else
-        mainCppSourcePath = pkgDir.absoluteFilePath("main.cpp");
-    Files::copyTextFile(mainCppSourcePath,
-                        dstDir.absoluteFilePath("main.cpp"));
+    bool useCustomCpp = false;
+    if (newAppDialog->useSources()) {
+        QString mainCppSourcePath = QDir().absoluteFilePath(newAppDialog->sourcesPath());
+        useCustomCpp = Files::copyTextFile(mainCppSourcePath,
+                                           dstDir.absoluteFilePath("main.cpp"));
+    }
+
+    if (!useCustomCpp) {
+        Files::copyTextFile(pkgDir.absoluteFilePath("main.cpp"),
+                            dstDir.absoluteFilePath("main.cpp"));
+    }
 
     App::createSolution(dstDir, name);
 
@@ -254,6 +258,16 @@ void AppsForm::on_createButton_clicked()
     App app{ AppSource{ AppSource::WorkingDirectory, workingDir.path, SourceStatus::OK },
                            App::NotConfigured, name, Version{}, containerName };
     app.configurate();
+
+    if (newAppDialog->needCreateResources()) {
+        dstDir.mkdir("images");
+        dstDir.mkdir("design");
+        AppConfig config = app.config();
+        config.imagesPath = dstDir.absoluteFilePath("images");
+        config.designPath = dstDir.absoluteFilePath("design");
+        app.setConfig(config);
+    }
+
     app.validate();
     appsModel->append(app);
     emit addedApp(app, true);

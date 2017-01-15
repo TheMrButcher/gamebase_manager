@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>180</height>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,20 @@
      </item>
      <item>
       <widget class="QLineEdit" name="nameEdit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QCheckBox" name="needCreateResourcesBox">
+       <property name="text">
+        <string>Создать папки для изображений и дизайна</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

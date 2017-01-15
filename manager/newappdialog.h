@@ -19,6 +19,7 @@ public:
     QString name() const;
     bool useSources() const;
     QString sourcesPath() const;
+    bool needCreateResources() const;
 
 private slots:
     void setSourcePathEnabled(bool value);

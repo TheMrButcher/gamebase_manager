@@ -57,7 +57,7 @@ AppConfig AppConfig::makeDeployedAppConfig(QDir rootDir, const AppConfig& origin
 {
     AppConfig config = originConfig;
     config.imagesPath = rootDir.absoluteFilePath("resources/images");
-    config.designPath = rootDir.absoluteFilePath("resources/designs");
+    config.designPath = rootDir.absoluteFilePath("resources/design");
     config.shadersPath = rootDir.absoluteFilePath("resources/shaders");
     config.fontsPath = rootDir.absoluteFilePath("resources/fonts");
     return config;

@@ -41,6 +41,11 @@ QString NewAppDialog::sourcesPath() const
     return ui->sourcesPathEdit->text();
 }
 
+bool NewAppDialog::needCreateResources() const
+{
+    return ui->needCreateResourcesBox->isChecked();
+}
+
 void NewAppDialog::setSourcePathEnabled(bool value)
 {
     ui->sourcesPathLabel->setEnabled(value);
