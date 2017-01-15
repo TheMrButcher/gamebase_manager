@@ -2,6 +2,7 @@
 #include "ui_appconfigurationdialog.h"
 #include "files.h"
 #include "settings.h"
+#include "dimensions.h"
 #include <QFileDialog>
 #include <QDebug>
 
@@ -43,6 +44,8 @@ AppConfigurationDialog::AppConfigurationDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    Dimensions::createDimensionsVariants(ui->dimensionsComboBox);
+
     connect(ui->updateButton, SIGNAL(clicked()), this, SLOT(update()));
 }
 
@@ -70,6 +73,10 @@ AppConfig AppConfigurationDialog::resultConfig() const
     auto config = originConfig;
     config.imagesPath = ui->imagesPath->text();
     config.designPath = ui->designPath->text();
+    config.isWindow = ui->windowModeCheckBox->isChecked();
+    Dimensions dims = Dimensions::fromString(ui->dimensionsComboBox->currentText());
+    config.width = dims.width;
+    config.height = dims.height;
     return config;
 }
 
@@ -98,6 +105,8 @@ void AppConfigurationDialog::set(App app, const AppConfig& config)
     ui->versionEdit->setText(app.version.toString());
     ui->imagesPath->setText(config.imagesPath);
     ui->designPath->setText(config.designPath);
+    ui->windowModeCheckBox->setChecked(config.isWindow);
+    ui->dimensionsComboBox->setCurrentText(Dimensions::toString(config.width, config.height));
     updateStatuses(app);
 }
 

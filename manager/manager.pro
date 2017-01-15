@@ -60,7 +60,8 @@ SOURCES += main.cpp\
     maintabform.cpp \
     firstusagedialog.cpp \
     config.cpp \
-    editorconfig.cpp
+    editorconfig.cpp \
+    dimensions.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -105,7 +106,8 @@ HEADERS  += mainwindow.h \
     maintabform.h \
     firstusagedialog.h \
     config.h \
-    editorconfig.h
+    editorconfig.h \
+    dimensions.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
