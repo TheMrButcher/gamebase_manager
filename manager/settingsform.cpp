@@ -2,6 +2,8 @@
 #include "ui_settingsform.h"
 #include "settings.h"
 #include "mainwindow.h"
+#include "dimensions.h"
+#include "editorconfig.h"
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -28,6 +30,8 @@ SettingsForm::SettingsForm(MainWindow* parent) :
     ui->appSources->setModel(appSourcesModel);
     ui->appSources->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->appSources->setColumnWidth(1, 50);
+
+    Dimensions::createDimensionsVariants(ui->dimensionsComboBox);
 
     if (!Settings::instance().read(SETTINGS_FILE_NAME)) {
         QMessageBox::warning(this, QString("Ошибка при чтении настроек"),
@@ -126,16 +130,35 @@ void SettingsForm::updateAppSource(const AppSource& source)
     appSourcesModel->update(source);
 }
 
+void SettingsForm::applyEditorSettings()
+{
+    ui->editorSettings->setEnabled(true);
+    const auto& config = EditorConfig::instance();
+    ui->dimensionsComboBox->setCurrentText(Dimensions::toString(config.width, config.height));
+    ui->windowModeCheckBox->setChecked(config.isWindow);
+}
+
 void SettingsForm::on_acceptButton_clicked()
 {
     Settings::instance() = get();
     Settings::instance().write(SETTINGS_FILE_NAME);
     mainWindow->updateAll();
+
+    auto& config = EditorConfig::instance();
+    if (!config.isVirtual && Settings::instance().workingDir().check() == SourceStatus::OK) {
+        Dimensions dims = Dimensions::fromString(ui->dimensionsComboBox->currentText());
+        config.width = dims.width;
+        config.height = dims.height;
+        config.isWindow = ui->windowModeCheckBox->isChecked();
+        config.write();
+    }
 }
 
 void SettingsForm::on_cancelButton_clicked()
 {
     set(Settings::instance());
+    if (!EditorConfig::instance().isVirtual)
+        applyEditorSettings();
 }
 
 void SettingsForm::onGamebaseSourcesSelectionChanged(

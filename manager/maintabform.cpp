@@ -238,6 +238,7 @@ void MainTabForm::updateEditorConfig()
     if (!config.isVirtual)
         return;
     config.read();
+    parent->settingsForm()->applyEditorSettings();
 }
 
 QPushButton* MainTabForm::addRow(int row, MainTabForm::FeatureStatus status, QString label, QString buttonLabel)

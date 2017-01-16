@@ -29,6 +29,7 @@ public:
     void setAllAppSourcesUnknown();
     void updateLibrarySource(const LibrarySource& source);
     void updateAppSource(const AppSource& source);
+    void applyEditorSettings();
 
 private slots:
     void on_acceptButton_clicked();
