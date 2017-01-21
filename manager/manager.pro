@@ -61,7 +61,8 @@ SOURCES += main.cpp\
     firstusagedialog.cpp \
     config.cpp \
     editorconfig.cpp \
-    dimensions.cpp
+    dimensions.cpp \
+    githubdownloader.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -107,7 +108,8 @@ HEADERS  += mainwindow.h \
     firstusagedialog.h \
     config.h \
     editorconfig.h \
-    dimensions.h
+    dimensions.h \
+    githubdownloader.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \
