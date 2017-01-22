@@ -62,7 +62,10 @@ SOURCES += main.cpp\
     config.cpp \
     editorconfig.cpp \
     dimensions.cpp \
-    githubdownloader.cpp
+    githubdownloader.cpp \
+    githubupdatedownloader.cpp \
+    selfupdater.cpp \
+    updatedescriptor.cpp
 
 HEADERS  += mainwindow.h \
     aboutwindow.h \
@@ -109,7 +112,11 @@ HEADERS  += mainwindow.h \
     config.h \
     editorconfig.h \
     dimensions.h \
-    githubdownloader.h
+    githubdownloader.h \
+    githubupdatedownloader.h \
+    selfupdater.h \
+    updatedescriptor.h \
+    taskmode.h
 
 FORMS    += mainwindow.ui \
     aboutwindow.ui \

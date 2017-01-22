@@ -20,6 +20,7 @@ const QString Files::FONTS_DIR_NAME = "fonts";
 const QString Files::SOURCES_DIR_NAME = "src";
 const QString Files::APP_CONFIG_NAME = "Config.json";
 const QString Files::APP_PROJECT_NAME = "ManagerProject.json";
+const QString Files::UPDATE_SCRIPT_NAME = "update.bat";
 
 bool Files::exists(const QDir& dir, QString fname)
 {

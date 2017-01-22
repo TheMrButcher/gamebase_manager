@@ -81,7 +81,7 @@ void GithubLibraryDownloader::download(const Library& library)
     auto sourcesFilePath = dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     requests.append(GithubDownloader::Request{
         release.sourcesUrl, sourcesFilePath, "application/vnd.github.v3+json" });
-    downloader->download(requests);
+    downloader->download(requests, TaskMode::ShowDialog);
 }
 
 void GithubLibraryDownloader::onVersionsUpdated(QStringList versions)

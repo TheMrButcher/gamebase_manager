@@ -2,6 +2,7 @@
 #define GITHUBDOWNLOADER_H
 
 #include "sourcestatus.h"
+#include "taskmode.h"
 #include <QNetworkAccessManager>
 #include <QByteArray>
 
@@ -42,7 +43,7 @@ public:
         QByteArray format;
     };
 
-    void download(const QList<Request>& requests);
+    void download(const QList<Request>& requests, TaskMode mode);
 
 signals:
     void broken();
@@ -89,6 +90,7 @@ private:
 
     QHash<QString, DownloadDesc> downloadRequests;
     QProgressDialog* progressDialog;
+    TaskMode mode;
 };
 
 #endif // GITHUBDOWNLOADER_H

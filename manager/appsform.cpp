@@ -152,7 +152,7 @@ void AppsForm::onTempAppAdded(App app)
             return;
     }
 
-    QString containerName = app.name + "_" + app.version.version.join('_');
+    QString containerName = app.name + "_" + app.version.toStringList().join('_');
     containerName = App::makeContainerName(dir, containerName);
     if (containerName.isEmpty()) {
         QMessageBox::warning(this, "Ошибка при построении приложения",

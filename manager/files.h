@@ -34,6 +34,8 @@ public:
     static const QString APP_CONFIG_NAME;
     static const QString APP_PROJECT_NAME;
 
+    static const QString UPDATE_SCRIPT_NAME;
+
     static bool exists(const QDir& dir, QString fname);
     static bool existsDir(const QDir& dir, QString fname);
     static bool copyTextFile(QString srcPath, QString dstPath, bool withBOM = false);

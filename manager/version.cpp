@@ -4,12 +4,25 @@
 
 QString Version::toString() const
 {
-    return version.join('.');
+    return toStringList().join('.');
+}
+
+QStringList Version::toStringList() const
+{
+    QStringList versionStrParts;
+    versionStrParts.reserve(version.size());
+    foreach (int num, version)
+        versionStrParts.append(QString::number(num));
+    return versionStrParts;
 }
 
 void Version::set(QString versionStr)
 {
-    version = versionStr.split('.', QString::SkipEmptyParts);
+    QStringList versionStrParts = versionStr.split('.', QString::SkipEmptyParts);
+    version.clear();
+    version.reserve(versionStrParts.size());
+    foreach (auto str, versionStrParts)
+        version.append(str.toInt());
 }
 
 bool Version::read(QString fileName)
@@ -39,6 +52,19 @@ Version Version::fromString(QString versionStr)
     return version;
 }
 
+Version Version::fromFile(QString path)
+{
+    Version version;
+    version.read(path);
+    return version;
+}
+
+Version Version::selfVersion()
+{
+    static const Version MANAGER_VERSION = fromFile(":/common/VERSION.txt");
+    return MANAGER_VERSION;
+}
+
 bool operator==(const Version& v1, const Version& v2)
 {
     return v1.version == v2.version;
@@ -59,4 +85,9 @@ bool operator<(const Version& v1, const Version& v2)
 bool operator<=(const Version& v1, const Version& v2)
 {
     return !(v2 < v1);
+}
+
+uint qHash(const Version& version, uint seed)
+{
+    return qHash(version.toString(), seed);
 }

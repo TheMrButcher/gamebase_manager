@@ -34,12 +34,14 @@ public slots:
     void updateAll();
     void updateLibrarySources();
     void updateAppSources();
+    void gotUpdates(bool any);
 
 private slots:
     void on_aboutAction_triggered();
 
     void onLibrarySourceUpdateFinished(LibrarySource source, const QList<Library>& libraries);
     void onAppSourceUpdateFinished(AppSource source, const QList<App>& apps);
+    void startAdditionalBackgroundTasks();
 
 private:
     void updateLibrarySources(const Settings& curSettings);
@@ -51,6 +53,7 @@ private:
     SettingsForm* settings;
     LibrariesForm* libraries;
     AppsForm* apps;
+    bool askAboutUpdates;
 };
 
 #endif // MAINWINDOW_H

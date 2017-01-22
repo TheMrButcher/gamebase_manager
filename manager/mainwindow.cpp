@@ -10,11 +10,17 @@
 #include "librarysourcemanagerlist.h"
 #include "appsourcemanagerlist.h"
 #include "progressmanager.h"
+#include "githubupdatedownloader.h"
+#include "selfupdater.h"
+#include <QMessageBox>
+#include <QTimer>
 
 namespace {
 LibrarySourceManagerList* librarySourceManagers;
 AppSourceManagerList* appSourceManagers;
 ProgressManager* progressManager;
+GithubUpdateDownloader* selfUpdateDownloader = nullptr;
+SelfUpdater* selfUpdater = nullptr;
 }
 
 LibrarySourceManagerList* LibrarySourceManagerList::instance()
@@ -32,9 +38,20 @@ ProgressManager* ProgressManager::instance()
     return progressManager;
 }
 
+GithubUpdateDownloader* GithubUpdateDownloader::instance()
+{
+    return selfUpdateDownloader;
+}
+
+SelfUpdater* SelfUpdater::instance()
+{
+    return selfUpdater;
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    askAboutUpdates(true)
 {
     ui->setupUi(this);
 
@@ -58,6 +75,14 @@ MainWindow::MainWindow(QWidget *parent) :
         dialog->show();
     }
 
+    selfUpdateDownloader = new GithubUpdateDownloader(Settings::instance().selfUpdateSourceUrl, this);
+    selfUpdater = new SelfUpdater(this);
+    connect(selfUpdateDownloader, SIGNAL(finishedUpdate(QList<UpdateDescriptor>)),
+            selfUpdater, SLOT(onUpdatesListDownloaded(QList<UpdateDescriptor>)));
+    connect(selfUpdateDownloader, SIGNAL(finishedDownload()),
+            selfUpdater, SLOT(onDownloadFinished()));
+    connect(selfUpdater, SIGNAL(hasUpdates(bool)), this, SLOT(gotUpdates(bool)));
+
     libraries = new LibrariesForm(this);
     ui->librariesLayout->addWidget(libraries);
 
@@ -69,7 +94,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mainTab = new MainTabForm(this);
     ui->mainTabLayout->addWidget(mainTab);
 
-    updateAll();
+    QTimer::singleShot(0, this, SLOT(updateAll()));
+    QTimer::singleShot(3000, this, SLOT(startAdditionalBackgroundTasks()));
 }
 
 MainWindow::~MainWindow()
@@ -114,6 +140,22 @@ void MainWindow::updateAppSources()
     updateAppSources(Settings::instance());
 }
 
+void MainWindow::gotUpdates(bool any)
+{
+    if (!any)
+        return;
+    if (!askAboutUpdates)
+        return;
+    askAboutUpdates = false;
+    auto answer = QMessageBox::question(this, "Установка обновления",
+                                        "Доступно обновление до версии "
+                                        + selfUpdater->targetVersion().toString()
+                                        + ". Установить?");
+    if (answer != QMessageBox::Yes)
+        return;
+    selfUpdater->updateApp();
+}
+
 void MainWindow::on_aboutAction_triggered()
 {
     about->show();
@@ -129,6 +171,12 @@ void MainWindow::onAppSourceUpdateFinished(AppSource source, const QList<App>& a
 {
     settings->updateAppSource(source);
     this->apps->append(apps);
+}
+
+void MainWindow::startAdditionalBackgroundTasks()
+{
+    selfUpdateDownloader->updateInfo();
+    selfUpdater->checkDownloadsDir();
 }
 
 void MainWindow::updateLibrarySources(const Settings& curSettings)

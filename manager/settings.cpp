@@ -11,6 +11,7 @@ namespace {
 const QString DEFAULT_WORKING_DIR = "programs";
 const QString DEFAULT_DOWNLOADS_DIR = "downloads";
 const QString DEFAULT_OUTPUT_DIR = "output";
+const QString DEFAULT_SELF_UPDATE_SOURCE_URL = "https://github.com/TheMrButcher/gamebase_manager";
 const LibrarySource DEFAULT_LIBRARY_SOURCE{
     LibrarySource::Server,
     "https://github.com/TheMrButcher/gamebase",
@@ -37,6 +38,7 @@ bool Settings::read(QString fname)
     vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
     outputPath = Files::absPath(rootObj["outputPath"].toString(outputPath));
     isFirstUsage = rootObj["isFirstUsage"].toBool(false);
+    selfUpdateSourceUrl = rootObj["selfUpdateSourceUrl"].toString(selfUpdateSourceUrl);
 
     auto librarySourcesArray = rootObj["librarySources"].toArray();
     librarySources.clear();
@@ -89,6 +91,7 @@ void Settings::write(QString fname)
     rootObj["vcVarsPath"] = vcVarsPath;
     rootObj["outputPath"] = dir.relativeFilePath(outputPath);
     rootObj["isFirstUsage"] = false;
+    rootObj["selfUpdateSourceUrl"] = selfUpdateSourceUrl;
 
     QJsonArray librarySourcesArray;
     foreach (auto source, librarySources) {
@@ -151,7 +154,8 @@ Settings Settings::defaultValue()
     appSources.append(AppSource{ AppSource::WorkingDirectory, workingPath, SourceStatus::Unknown });
 
     QString outputPath = QDir().absoluteFilePath(DEFAULT_OUTPUT_DIR);
-    return Settings{ librarySources, appSources, extractVCVarsPath(), outputPath, true };
+    return Settings{ librarySources, appSources, extractVCVarsPath(),
+                outputPath, true, DEFAULT_SELF_UPDATE_SOURCE_URL };
 }
 
 Settings& Settings::instance()

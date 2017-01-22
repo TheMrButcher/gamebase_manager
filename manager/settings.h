@@ -24,6 +24,7 @@ public:
     QString vcVarsPath;
     QString outputPath;
     bool isFirstUsage;
+    QString selfUpdateSourceUrl;
 };
 
 #endif // SETTINGS_H

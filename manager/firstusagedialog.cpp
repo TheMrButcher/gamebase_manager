@@ -7,10 +7,7 @@ FirstUsageDialog::FirstUsageDialog(QWidget *parent) :
     ui(new Ui::FirstUsageDialog)
 {
     ui->setupUi(this);
-
-    Version managerVersion;
-    managerVersion.read(":/common/VERSION.txt");
-    ui->titleLabel->setText(ui->titleLabel->text() + managerVersion.toString());
+    ui->titleLabel->setText(ui->titleLabel->text() + Version::selfVersion().toString());
 }
 
 FirstUsageDialog::~FirstUsageDialog()

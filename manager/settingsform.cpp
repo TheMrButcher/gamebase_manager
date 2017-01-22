@@ -83,7 +83,7 @@ void SettingsForm::set(const Settings& settings)
 
 Settings SettingsForm::get() const
 {
-    Settings result;
+    Settings result = Settings::instance();
     result.librarySources = librarySourcesModel->get();
     result.librarySources.append(LibrarySource{
         LibrarySource::WorkingDirectory, ui->workingDir->text(), SourceStatus::Unknown });

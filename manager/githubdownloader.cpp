@@ -41,6 +41,7 @@ GithubDownloader::GithubDownloader(QString sourceUrl, QWidget* parent)
     , sourceStatus(SourceStatus::Unknown)
     , fatalError(false)
     , parent(parent)
+    , mode(TaskMode::ShowDialog)
 {
     networkManager = new QNetworkAccessManager(parent);
     int hostNameStart = sourceUrl.indexOf(GITHUB_HOST_NAME);
@@ -103,24 +104,27 @@ QList<GithubDownloader::Release> GithubDownloader::releases(QStringList versions
     return result;
 }
 
-void GithubDownloader::download(const QList<GithubDownloader::Request>& requests)
+void GithubDownloader::download(const QList<GithubDownloader::Request>& requests, TaskMode mode)
 {
-    if (!progressDialog) {
-        progressDialog = new QProgressDialog(parent);
+    this->mode = mode;
+    if (mode == TaskMode::ShowDialog) {
+        if (!progressDialog) {
+            progressDialog = new QProgressDialog(parent);
 
-        auto bar = new QProgressBar(progressDialog);
-        bar->setTextVisible(false);
-        progressDialog->setBar(bar);
+            auto bar = new QProgressBar(progressDialog);
+            bar->setTextVisible(false);
+            progressDialog->setBar(bar);
 
-        progressDialog->setWindowTitle("Загрузка");
-        progressDialog->setMinimumWidth(400);
-        progressDialog->setMinimumDuration(0);
-        progressDialog->setRange(0, 0);
-        progressDialog->setModal(true);
-        connect(progressDialog, SIGNAL(canceled()), this, SLOT(onCancel()));
+            progressDialog->setWindowTitle("Загрузка");
+            progressDialog->setMinimumWidth(400);
+            progressDialog->setMinimumDuration(0);
+            progressDialog->setRange(0, 0);
+            progressDialog->setModal(true);
+            connect(progressDialog, SIGNAL(canceled()), this, SLOT(onCancel()));
+        }
+        progressDialog->setLabelText("");
+        progressDialog->show();
     }
-    progressDialog->setLabelText("");
-    progressDialog->show();
 
     foreach (const auto& request, requests) {
         QUrl url(request.url);
@@ -157,7 +161,8 @@ void GithubDownloader::replyFinished(QNetworkReply* reply)
         }
         if (areAllDownloadsFinished) {
             downloadRequests.clear();
-            progressDialog->hide();
+            if (mode == TaskMode::ShowDialog)
+                progressDialog->hide();
             emit finishedDownload();
         }
     }
@@ -175,7 +180,10 @@ void GithubDownloader::onDownload(qint64 bytesReceived, qint64 /*bytesTotal*/)
         received += static_cast<int>(desc.bytesReceived);
     }
 
-    progressDialog->setLabelText(QString("Загружено: %1 МБ").arg(received / (1024.0 * 1024.0)));
+    if (mode == TaskMode::ShowDialog) {
+        progressDialog->setLabelText(
+                    QString("Загружено: %1 МБ").arg(received / (1024.0 * 1024.0)));
+    }
 }
 
 void GithubDownloader::onCancel()
@@ -184,7 +192,8 @@ void GithubDownloader::onCancel()
         if (desc.isRunning)
             desc.reply->abort();
     }
-    progressDialog->hide();
+    if (mode == TaskMode::ShowDialog)
+        progressDialog->hide();
     emit cancelled();
 }
 
