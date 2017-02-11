@@ -257,7 +257,6 @@ void AppsForm::on_createButton_clicked()
                         dstDir.absoluteFilePath(name + ".vcxproj.user"), true);
     App app{ AppSource{ AppSource::WorkingDirectory, workingDir.path, SourceStatus::OK },
                            App::NotConfigured, name, Version{}, containerName };
-    app.configurate();
 
     if (newAppDialog->needCreateResources()) {
         dstDir.mkdir("images");
@@ -268,6 +267,7 @@ void AppsForm::on_createButton_clicked()
         app.setConfig(config);
     }
 
+    app.configurate();
     app.validate();
     appsModel->append(app);
     emit addedApp(app, true);
