@@ -8,9 +8,13 @@
 #include "librarysourcemanagerlist.h"
 #include "appsourcemanagerlist.h"
 #include "editorconfig.h"
+#include "files.h"
 #include <QMessageBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QDir>
+#include <QUrl>
+#include <QDesktopServices>
 
 MainTabForm::MainTabForm(MainWindow* parent)
     : QWidget(parent)
@@ -98,14 +102,17 @@ void MainTabForm::updateDirsState()
 
 void MainTabForm::updateLibraryState()
 {
+    bool hasLibrary = true;
     if (!curLib.exists() && !neededLib.exists()) {
         QPushButton* button = addRow(curRow++, Error,
                 "Рабочая библиотека \"Gamebase\" отсутствует. Источники библиотеки недоступны.", "Установить");
         button->setEnabled(false);
+        hasLibrary = false;
     } else if (!curLib.exists()) {
         QPushButton* button = addRow(curRow++, Error,
                 "Рабочая библиотека \"Gamebase\" отсутствует.", "Установить");
         connect(button, SIGNAL(clicked()), this, SLOT(deployLibrary()));
+        hasLibrary = false;
     } else if (!neededLib.exists()) {
         QString label = "Установлена версия рабочей библиотеки \"Gamebase\" ("
                 + curLib.version.toString()
@@ -124,6 +131,10 @@ void MainTabForm::updateLibraryState()
         QPushButton* button = addRow(curRow++, OK, label, "Обновить");
         button->setEnabled(false);
     }
+
+    ui->openAppsDirButton->setEnabled(Settings::instance().workingDir().check() == SourceStatus::OK);
+    ui->openAppWorkingDirButton->setEnabled(hasLibrary);
+    ui->openImagesButton->setEnabled(hasLibrary);
 }
 
 void MainTabForm::updateAppsState()
@@ -547,4 +558,33 @@ void MainTabForm::on_updateStateButton_clicked()
 void MainTabForm::on_installAllButton_clicked()
 {
     processNextAction();
+}
+
+void MainTabForm::on_openAppsDirButton_clicked()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(Settings::instance().workingDir().path));
+}
+
+void MainTabForm::on_openAppWorkingDirButton_clicked()
+{
+    QDir dir(Settings::instance().workingDir().path);
+    if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
+        return;
+    if (!dir.cd(Files::CONTRIB_DIR_NAME))
+        return;
+    if (!dir.cd(Files::BIN_DIR_NAME))
+        return;
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
+}
+
+void MainTabForm::on_openImagesButton_clicked()
+{
+    QDir dir(Settings::instance().workingDir().path);
+    if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
+        return;
+    if (!dir.cd(Files::RESOURCES_DIR_NAME))
+        return;
+    if (!dir.cd("images"))
+        return;
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir.absolutePath()));
 }

@@ -65,6 +65,12 @@ private slots:
 
     void on_installAllButton_clicked();
 
+    void on_openAppsDirButton_clicked();
+
+    void on_openAppWorkingDirButton_clicked();
+
+    void on_openImagesButton_clicked();
+
 private:
     Ui::MainTabForm *ui;
     MainWindow* parent;
