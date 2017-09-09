@@ -17,5 +17,6 @@
         <file>images/icons/NotConfigured.png</file>
         <file>images/icons/Warning.png</file>
         <file>scripts/update.bat</file>
+        <file>scripts/find_vs.bat</file>
     </qresource>
 </RCC>

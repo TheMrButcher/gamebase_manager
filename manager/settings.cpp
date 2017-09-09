@@ -16,8 +16,10 @@ const LibrarySource DEFAULT_LIBRARY_SOURCE{
     LibrarySource::Server,
     "https://github.com/TheMrButcher/gamebase",
     SourceStatus::Unknown };
-const QString MSVC_2010_TOOLS_KEY = "VS100COMNTOOLS";
-const QString VC_VARS_BAT_NAME = "vcvarsall.bat";
+const QString MSVC_VERSION = "MSVC2017";
+const QString VC_VARS_BAT_NAME = "VsDevCmd.bat";
+const QString FIND_VS_BATCH_NAME = "find_vs.bat";
+const QString VC_PATH_FILE_NAME = "vc_path.txt";
 }
 
 bool Settings::read(QString fname)
@@ -35,7 +37,13 @@ bool Settings::read(QString fname)
     auto rootObj = json.object();
     auto workingDir = Files::absPath(rootObj["workingDir"].toString(this->workingDir().path));
     auto downloadsDir = Files::absPath(rootObj["downloadsDir"].toString(this->downloadsDir().path));
-    vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
+    vcVersion = rootObj["vcVersion"].toString();
+    if (vcVersion != MSVC_VERSION) {
+        vcVarsPath = extractVCVarsPath();
+        vcVersion = MSVC_VERSION;
+    } else {
+        vcVarsPath = rootObj["vcVarsPath"].toString(extractVCVarsPath());
+    }
     outputPath = Files::absPath(rootObj["outputPath"].toString(outputPath));
     isFirstUsage = rootObj["isFirstUsage"].toBool(false);
     selfUpdateSourceUrl = rootObj["selfUpdateSourceUrl"].toString(selfUpdateSourceUrl);
@@ -88,6 +96,7 @@ void Settings::write(QString fname)
     QJsonObject rootObj;
     rootObj["workingDir"] = dir.relativeFilePath(workingDir().path);
     rootObj["downloadsDir"] = dir.relativeFilePath(downloadsDir().path);
+    rootObj["vcVersion"] = vcVersion;
     rootObj["vcVarsPath"] = vcVarsPath;
     rootObj["outputPath"] = dir.relativeFilePath(outputPath);
     rootObj["isFirstUsage"] = false;
@@ -154,7 +163,7 @@ Settings Settings::defaultValue()
     appSources.append(AppSource{ AppSource::WorkingDirectory, workingPath, SourceStatus::Unknown });
 
     QString outputPath = QDir().absoluteFilePath(DEFAULT_OUTPUT_DIR);
-    return Settings{ librarySources, appSources, extractVCVarsPath(),
+    return Settings{ librarySources, appSources, extractVCVarsPath(), MSVC_VERSION,
                 outputPath, true, DEFAULT_SELF_UPDATE_SOURCE_URL };
 }
 
@@ -164,20 +173,46 @@ Settings& Settings::instance()
     return settings;
 }
 
+
+#include <QDebug>
 QString Settings::extractVCVarsPath()
 {
-    auto env = QProcessEnvironment::systemEnvironment();
-    if (!env.contains(MSVC_2010_TOOLS_KEY))
+    if (QFile(FIND_VS_BATCH_NAME).exists())
+        QFile::remove(FIND_VS_BATCH_NAME);
+    Files::copyTextFile(":/scripts/find_vs.bat", FIND_VS_BATCH_NAME);
+    if (QFile(VC_PATH_FILE_NAME).exists())
+        QFile::remove(VC_PATH_FILE_NAME);
+
+    QProcess cmdProcess;
+    cmdProcess.setProcessEnvironment(
+                QProcessEnvironment::systemEnvironment());
+    QStringList arguments;
+    arguments << "/C" << FIND_VS_BATCH_NAME;
+    cmdProcess.start("cmd.exe", arguments);
+    if (!cmdProcess.waitForStarted(5000))
         return QString();
-    QDir vcDir(env.value(MSVC_2010_TOOLS_KEY));
-    if (!vcDir.exists())
+    if (!cmdProcess.waitForFinished(5000))
         return QString();
-    if (!vcDir.cdUp())
+
+    QFile file(VC_PATH_FILE_NAME);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << VC_PATH_FILE_NAME << " doesn't exist";
         return QString();
-    if (!vcDir.cdUp())
+    }
+    QString vcPath = file.readLine();
+    QDir vcDir(vcPath);
+    if (!vcDir.exists()) {
+        qDebug() << vcDir.path() << " doesn't exist";
         return QString();
-    if (!vcDir.cd("VC"))
+    }
+    if (!vcDir.cd("Common7")) {
+        qDebug() << vcDir.path() << " doesn't exist";
         return QString();
+    }
+    if (!vcDir.cd("Tools")) {
+        qDebug() << vcDir.path() << " doesn't exist";
+        return QString();
+    }
     if (!vcDir.exists(VC_VARS_BAT_NAME))
         return QString();
     return vcDir.absoluteFilePath(VC_VARS_BAT_NAME);
