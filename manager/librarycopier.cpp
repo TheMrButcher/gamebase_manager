@@ -30,11 +30,11 @@ void LibraryCopier::run()
     dstDir.mkdir(resultLibrary.archiveName);
     srcDir.cd(library.archiveName);
     dstDir.cd(resultLibrary.archiveName);
-    manager->copy(srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME),
-                  dstDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME));
+    manager->copy(srcDir.absoluteFilePath(Files::CONTRIB_ARCHIVE_NAME),
+                  dstDir.absoluteFilePath(Files::CONTRIB_ARCHIVE_NAME));
     if (resultLibrary.state == Library::BinaryArchive)
-        manager->copy(srcDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME),
-                      dstDir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME));
+        manager->copy(srcDir.absoluteFilePath(Files::GAMEBASE_ARCHIVE_NAME),
+                      dstDir.absoluteFilePath(Files::GAMEBASE_ARCHIVE_NAME));
     manager->run();
     return emitFinish();
 }

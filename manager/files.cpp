@@ -3,14 +3,17 @@
 #include <QTextStream>
 
 const QString Files::GAMEBASE_PROJECT_NAME = "gamebase";
-const QString Files::BINARY_ARCHIVE_NAME = "bin.zip";
-const QString Files::SOURCES_ARCHIVE_NAME = "sources.zip";
+const QString Files::CONTRIB_ARCHIVE_NAME = "contrib.zip";
+const QString Files::GAMEBASE_ARCHIVE_NAME = "gamebase.zip";
 const QString Files::VERSION_FILE_NAME = "VERSION.txt";
 const QString Files::EDITOR_LINK_NAME = "DesignEditor.lnk";
 const QString Files::DEPLOYED_ROOT_DIR_NAME = Files::GAMEBASE_PROJECT_NAME;
 const QString Files::CONTRIB_DIR_NAME = "contrib";
 const QString Files::BIN_DIR_NAME = "bin";
 const QString Files::INCLUDE_DIR_NAME = "include";
+const QString Files::DEBUG_DIR_NAME = "Debug";
+const QString Files::RELEASE_DIR_NAME = "Release";
+const QString Files::EDITOR_DIR_NAME = "Editor";
 const QString Files::PACKAGE_DIR_NAME = "package";
 const QString Files::EDITOR_PROJECT_NAME = "design_editor";
 const QString Files::EDITOR_CONFIG_NAME = "design_editor_config.json";

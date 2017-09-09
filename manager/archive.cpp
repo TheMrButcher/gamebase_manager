@@ -2,8 +2,7 @@
 #include "files.h"
 #include <QTemporaryFile>
 #include <JlCompress.h>
-
-#include <QDebug>
+#include <QSet>
 
 Archive::Archive(QString archiveName)
     : archiveName(archiveName)
@@ -23,24 +22,48 @@ bool Archive::open()
         return false;
     rootDir = new QuaZipDir(&zipFile);
     auto entries = rootDir->entryInfoList(QDir::Dirs);
-    if (entries.size() != 1)
-        return true;
-    auto result = entries.first().name;
-    if (!rootDir->cd(result))
-        return true;
-    return true;
-}
-
-QString Archive::rootName() const
-{
-    if (!rootDir)
-        return QString();
-    return rootDir->dirName();
+    if (entries.size() == 1) {
+        auto srcDirName = entries.first().name;
+        if (srcDirName != Files::SOURCES_DIR_NAME)
+            return false;
+        compiledVersion = false;
+    } else {
+        QSet<QString> subDirNames;
+        for (const auto& entry : entries)
+            subDirNames.insert(entry.name);
+        if (subDirNames.size() != 2
+            || !subDirNames.contains(Files::SOURCES_DIR_NAME)
+            || !subDirNames.contains(Files::BIN_DIR_NAME))
+            return false;
+        compiledVersion = true;
+    }
+    myVersion = exctractVersion();
+    return !myVersion.empty();
 }
 
 const QuaZipDir& Archive::root() const
 {
     return *rootDir;
+}
+
+bool Archive::isCompiledVersion()
+{
+    return compiledVersion;
+}
+
+const Version &Archive::version() const
+{
+    return myVersion;
+}
+
+QString Archive::findVersionFile()
+{
+    auto dir = root();
+    if (!dir.cd(Files::SOURCES_DIR_NAME))
+        return QString();
+    if (dir.exists(Files::VERSION_FILE_NAME))
+        return dir.filePath(Files::VERSION_FILE_NAME);
+    return QString();
 }
 
 Version Archive::exctractVersion()
@@ -59,32 +82,4 @@ Version Archive::exctractVersion()
     if (!version.read(tempFileName))
         return Version{};
     return version;
-}
-
-QString Archive::rootName(QString archiveName)
-{
-    Archive archive(archiveName);
-    if (!archive.open())
-        return QString();
-    return archive.rootName();
-}
-
-Version Archive::extractVersion(QString archiveName)
-{
-    Archive archive(archiveName);
-    if (!archive.open())
-        return Version{};
-    return archive.exctractVersion();
-}
-
-QString Archive::findVersionFile()
-{
-    const auto& dir = root();
-    if (dir.exists(Files::VERSION_FILE_NAME)) {
-        if (rootName() == ".")
-            return Files::VERSION_FILE_NAME;
-        else
-            return dir.filePath(Files::VERSION_FILE_NAME);
-    }
-    return QString();
 }

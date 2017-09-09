@@ -9,6 +9,10 @@
 #include <QWidget>
 #include <QDir>
 
+namespace {
+const QString GAMEBASE_UNARCHIVED_DIR = "gamebase_tmp";
+}
+
 LibraryDeployer::LibraryDeployer(const Library& library)
     : library(library)
 {
@@ -28,7 +32,7 @@ void LibraryDeployer::run()
         return emitFinish();
 
     QDir dstDir(workingDir.path);
-    if (!unarchiveSources(srcDir))
+    if (!unarchive(srcDir))
         return emitFinish();
 
     dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
@@ -56,35 +60,33 @@ void LibraryDeployer::run()
     emitFinish();
 }
 
-bool LibraryDeployer::unarchiveSources(QDir srcDir)
+bool LibraryDeployer::unarchive(QDir srcDir)
 {
-    auto sourcesArchivePath = srcDir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
-    auto unzippedArchiveDirName = Archive::rootName(sourcesArchivePath);
+    auto archivePath = srcDir.absoluteFilePath(Files::GAMEBASE_ARCHIVE_NAME);
 
     QDir dstDir(workingDir.path);
-    if (dstDir.exists(unzippedArchiveDirName)) {
+    if (dstDir.exists(GAMEBASE_UNARCHIVED_DIR)) {
         ProgressManager::invokeShow("Удаление временных файлов...", "Удалено файлов");
-        manager->remove(unzippedArchiveDirName);
+        manager->remove(GAMEBASE_UNARCHIVED_DIR);
         if (!manager->run())
             return false;
         manager->reset();
     }
 
-    ProgressManager::invokeShow("Распакова корня пакета...", "Распаковано файлов");
-    manager->unarchive(sourcesArchivePath, ".");
+    auto tmpDir = dstDir;
+    if (!tmpDir.mkdir(GAMEBASE_UNARCHIVED_DIR)
+        || !tmpDir.cd(GAMEBASE_UNARCHIVED_DIR))
+        return false;
+
+    ProgressManager::invokeShow("Распаковка корня пакета...", "Распаковано файлов");
+    manager->unarchive(archivePath, GAMEBASE_UNARCHIVED_DIR);
     if (!manager->run())
         return false;
     manager->reset();
 
-    if (dstDir.cd(unzippedArchiveDirName))
-        dstDir.cdUp();
-    else
+    if (!QFile::rename(tmpDir.absoluteFilePath(Files::SOURCES_DIR_NAME),
+                       dstDir.absoluteFilePath(Files::DEPLOYED_ROOT_DIR_NAME)))
         return false;
-
-    if (unzippedArchiveDirName != Files::DEPLOYED_ROOT_DIR_NAME) {
-        if (!dstDir.rename(unzippedArchiveDirName, Files::DEPLOYED_ROOT_DIR_NAME))
-            return false;
-    }
     dstDir.cd(Files::DEPLOYED_ROOT_DIR_NAME);
 
     auto packageDir = dstDir;
@@ -94,6 +96,12 @@ bool LibraryDeployer::unarchiveSources(QDir srcDir)
     auto contribDir = dstDir;
     contribDir.cd(Files::CONTRIB_DIR_NAME);
     auto contribBinPath = contribDir.absoluteFilePath(Files::BIN_DIR_NAME);
+
+    if (tmpDir.exists(Files::BIN_DIR_NAME)) {
+        ProgressManager::invokeShow("Копирование бинарных файлов...", "Распаковано файлов");
+        manager->unarchive(packageDir.absoluteFilePath(Files::BIN_DIR_NAME + ".zip"),
+                           contribBinPath);
+    }
 
     ProgressManager::invokeShow("Распакова пакета...", "Распаковано файлов");
     manager->unarchive(packageDir.absoluteFilePath(Files::BIN_DIR_NAME + ".zip"),

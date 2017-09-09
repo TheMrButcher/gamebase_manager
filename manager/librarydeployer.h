@@ -22,7 +22,7 @@ signals:
     void finishedDeploy(Library library);
 
 private:
-    bool unarchiveSources(QDir srcDir);
+    bool unarchive(QDir srcDir);
     bool compileSources(QDir dir);
     void emitFinish();
 

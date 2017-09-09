@@ -13,17 +13,18 @@ public:
     bool open();
     QString rootName() const;
     const QuaZipDir& root() const;
-    Version exctractVersion();
-
-    static QString rootName(QString archiveName);
-    static Version extractVersion(QString archiveName);
+    bool isCompiledVersion();
+    const Version& version() const;
 
 private:
     QString findVersionFile();
+    Version exctractVersion();
 
     QString archiveName;
     QuaZip zipFile;
     QuaZipDir* rootDir;
+    Version myVersion;
+    bool compiledVersion;
 };
 
 #endif // ARCHIVE_H

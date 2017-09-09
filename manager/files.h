@@ -9,8 +9,8 @@ class Files
 public:
     static const QString GAMEBASE_PROJECT_NAME;
 
-    static const QString BINARY_ARCHIVE_NAME;
-    static const QString SOURCES_ARCHIVE_NAME;
+    static const QString CONTRIB_ARCHIVE_NAME;
+    static const QString GAMEBASE_ARCHIVE_NAME;
     static const QString VERSION_FILE_NAME;
 
     static const QString DEPLOYED_ROOT_DIR_NAME;
@@ -18,6 +18,9 @@ public:
     static const QString CONTRIB_DIR_NAME;
     static const QString BIN_DIR_NAME;
     static const QString INCLUDE_DIR_NAME;
+    static const QString DEBUG_DIR_NAME;
+    static const QString RELEASE_DIR_NAME;
+    static const QString EDITOR_DIR_NAME;
 
     static const QString PACKAGE_DIR_NAME;
 
