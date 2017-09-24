@@ -41,6 +41,7 @@ LibraryDeployer::LibraryDeployer(const Library& library)
     manager = new FilesManager(this);
     manager->setRootDirectory(workingDir.path);
     compiler = new Compiler(this);
+    compiler->setLegacySolution(true);
 }
 
 void LibraryDeployer::run()

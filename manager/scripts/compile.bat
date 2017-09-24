@@ -9,7 +9,7 @@ call "%VISUAL_CPP_VARIABLES_PATH%" x86
 where msbuild >nul 2>nul
 if not %ERRORLEVEL%==0 goto fail
 
-msbuild "%SOLUTION_TO_BUILD_NAME%" /p:Configuration=%BUILD_TYPE% /p:Platform=x86 /t:Clean,Build
+msbuild "%SOLUTION_TO_BUILD_NAME%" /p:Configuration=%BUILD_TYPE% /p:Platform=%PLATFORM_TYPE% /t:Clean,Build
 if not %ERRORLEVEL%==0 goto fail
 
 exit /b 0

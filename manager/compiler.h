@@ -18,6 +18,7 @@ public:
 
     Compiler(QObject* parent);
 
+    void setLegacySolution(bool value);
     bool compile(QDir projectDir, BuildType buildType);
     bool compile(QDir projectDir, QString projectName, BuildType buildType);
 
@@ -28,6 +29,7 @@ private:
     bool compileImpl(QDir projectDir, QString projectName, QString buildType);
 
     QAtomicInt cancelFlag;
+    bool legacySolution = false;
 };
 
 #endif // COMPILER_H

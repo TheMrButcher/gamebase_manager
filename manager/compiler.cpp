@@ -17,6 +17,11 @@ Compiler::Compiler(QObject* parent)
     connect(ProgressManager::instance(), SIGNAL(canceled()), this, SLOT(cancel()));
 }
 
+void Compiler::setLegacySolution(bool value)
+{
+    legacySolution = value;
+}
+
 bool Compiler::compile(QDir projectDir, BuildType buildType)
 {
     return compile(projectDir, projectDir.dirName(), buildType);
@@ -57,6 +62,7 @@ bool Compiler::compileImpl(QDir projectDir, QString projectName, QString buildTy
     env.insert("VISUAL_CPP_VARIABLES_PATH", vcVarsPath);
     env.insert("SOLUTION_TO_BUILD_NAME", projectName + ".sln");
     env.insert("BUILD_TYPE", buildType);
+    env.insert("PLATFORM_TYPE", legacySolution ? QString("Win32") : "x86");
     cmdProcess.setProcessEnvironment(env);
 
     QStringList arguments;
