@@ -26,7 +26,9 @@ bool Config::write(QDir rootDir, QString path) const
         return false;
 
     QTextStream stream(&dstFile);
-    stream << QString::fromUtf8(QJsonDocument(newRootObj).toJson());
+    stream.setCodec("UTF-8");
+    stream.setGenerateByteOrderMark(false);
+    stream << QJsonDocument(newRootObj).toJson();
     return true;
 }
 
