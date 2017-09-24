@@ -132,6 +132,12 @@ void MainTabForm::updateLibraryState()
         button->setEnabled(false);
     }
 
+    if (curLib.exists() && curLib.version < Version::CURRENT_MAJOR) {
+        QString label = "Текушая версия рабочей библиотеки \"Gamebase\" (" + curLib.version.toString()
+                + ") не поддерживается данной версией менеджера. Необходимо обновить библиотеку.";
+        addRow(curRow++, Error, label, "");
+    }
+
     ui->openAppsDirButton->setEnabled(Settings::instance().workingDir().check() == SourceStatus::OK);
     ui->openAppWorkingDirButton->setEnabled(hasLibrary);
     ui->openImagesButton->setEnabled(hasLibrary);
@@ -289,10 +295,13 @@ QPushButton* MainTabForm::addRow(int row, MainTabForm::FeatureStatus status, QSt
     ui->stateLayout->addWidget(textLabel, row, 1);
     stateWidgets.append(textLabel);
 
-    QPushButton* button = new QPushButton(buttonLabel);
-    ui->stateLayout->addWidget(button, row, 2);
-    stateWidgets.append(button);
-    return button;
+    if (!buttonLabel.isEmpty()) {
+        QPushButton* button = new QPushButton(buttonLabel);
+        ui->stateLayout->addWidget(button, row, 2);
+        stateWidgets.append(button);
+        return button;
+    }
+    return nullptr;
 }
 
 void MainTabForm::processNextAction()

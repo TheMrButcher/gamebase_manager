@@ -2,6 +2,8 @@
 #include <QFile>
 #include <QTextStream>
 
+const Version Version::CURRENT_MAJOR = Version::fromString("3.0.0");
+
 QString Version::toString() const
 {
     return toStringList().join('.');

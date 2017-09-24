@@ -29,7 +29,7 @@ void GithubLibraryDownloader::update()
 
 void GithubLibraryDownloader::download(const Library& library)
 {
-    Library resultLibrary = library.afterAction(Library::Download);
+    /*Library resultLibrary = library.afterAction(Library::Download);
     if (!downloader->hasConnection()) {
         emit finishedDownload(resultLibrary);
         return;
@@ -81,7 +81,7 @@ void GithubLibraryDownloader::download(const Library& library)
     auto sourcesFilePath = dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     requests.append(GithubDownloader::Request{
         release.sourcesUrl, sourcesFilePath, "application/vnd.github.v3+json" });
-    downloader->download(requests, TaskMode::ShowDialog);
+    downloader->download(requests, TaskMode::ShowDialog);*/
 }
 
 void GithubLibraryDownloader::onVersionsUpdated(QStringList versions)
@@ -99,6 +99,8 @@ void GithubLibraryDownloader::onVersionsUpdated(QStringList versions)
     cachedLibraries.clear();
     for (int i = 0; i < MAX_RELEASES_NUM && i < sortedVersions.size(); ++i) {
         auto version = sortedVersions[sortedVersions.size() - 1 - i];
+        if (version < Version::CURRENT_MAJOR)
+            break;
         cachedLibraries.append(Library{ source, Library::BinaryArchive, version, "" });
         cachedLibraries.append(Library{ source, Library::SourceCode, version, "" });
     }

@@ -36,12 +36,24 @@ QDir EditorConfig::editorDir()
         return dir;
     if (!dir.cd(Files::BIN_DIR_NAME))
         return dir;
+    if (!dir.cd(Files::RELEASE_DIR_NAME))
+        return dir;
     return dir;
 }
 
 QString EditorConfig::editorConfigPath()
 {
-    return editorDir().absoluteFilePath(Files::EDITOR_CONFIG_NAME);
+    auto workingDir = Settings::instance().workingDir().path;
+    QDir dir(workingDir);
+    if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME))
+        return QString();
+    if (!dir.cd(Files::CONTRIB_DIR_NAME))
+        return QString();
+    if (!dir.cd(Files::BIN_DIR_NAME))
+        return QString();
+    if (!dir.cd(Files::EDITOR_DIR_NAME))
+        return QString();
+    return dir.absoluteFilePath(Files::EDITOR_CONFIG_NAME);
 }
 
 QString EditorConfig::editorPath()

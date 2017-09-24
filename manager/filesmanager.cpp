@@ -125,6 +125,11 @@ void FilesManager::rename(QString srcPath, QString dstPath)
     ops.append(OpDesc{ OpDesc::Rename, srcPath, dstPath });
 }
 
+void FilesManager::move(QString srcPath, QString dstPath)
+{
+    ops.append(OpDesc{ OpDesc::Move, srcPath, dstPath });
+}
+
 void FilesManager::copyTree(QString srcPath, QString dstPath)
 {
     QFileInfo srcFileInfo(rootDir, srcPath);
@@ -132,7 +137,7 @@ void FilesManager::copyTree(QString srcPath, QString dstPath)
         QDir srcDir(rootDir.absoluteFilePath(srcPath));
         QDir dstDir(rootDir.absoluteFilePath(dstPath));
         ops.append(OpDesc{ OpDesc::MakeDir, QString(), dstDir.absolutePath() });
-        copyFiles(srcDir, dstDir);
+        processFiles(srcDir, dstDir, OpDesc::Copy);
     } else if (srcFileInfo.isFile()) {
         copy(srcPath, dstPath);
     } else {
@@ -148,7 +153,18 @@ void FilesManager::copyFiles(QString srcPath, QString dstPath)
     }
     QDir srcDir(rootDir.absoluteFilePath(srcPath));
     QDir dstDir(rootDir.absoluteFilePath(dstPath));
-    copyFiles(srcDir, dstDir);
+    processFiles(srcDir, dstDir, OpDesc::Copy);
+}
+
+void FilesManager::moveFiles(QString srcPath, QString dstPath)
+{
+    if (!QFileInfo(rootDir, srcPath).isDir()) {
+        ok = false;
+        return;
+    }
+    QDir srcDir(rootDir.absoluteFilePath(srcPath));
+    QDir dstDir(rootDir.absoluteFilePath(dstPath));
+    processFiles(srcDir, dstDir, OpDesc::Move);
 }
 
 void FilesManager::copy(QString srcPath, QString dstPath)
@@ -238,24 +254,14 @@ bool FilesManager::run()
                     removed = true;
                     break;
                 }
-                if (rootDir.rmdir(op.srcPath)) {
+                if (dir.removeRecursively()) {
                     removed = true;
                     break;
                 }
-
-                // last try...
-                auto entries = dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
-                foreach (auto entry, entries) {
-                    auto name = entry.fileName();
-                    if (entry.isDir()) {
-                        auto dirPath = dir.absoluteFilePath(name);
-                        rootDir.rmdir(dirPath);
-                    } else {
-                        dir.remove(name);
-                    }
-                }
             }
             ok = ok && removed;
+            if (!ok)
+                qDebug() << "Error removing dir: " << op.srcPath;
             ++processedOps;
             break;
         }
@@ -286,16 +292,24 @@ bool FilesManager::run()
 
         case OpDesc::Rename:
             ok = ok && rootDir.rename(op.srcPath, op.dstPath);
+            if (!ok)
+                qDebug() << "Error renaming " << op.srcPath << " to " << op.dstPath;
             ++processedOps;
             break;
 
         case OpDesc::MakeDir:
-            ok = ok && rootDir.mkdir(op.dstPath);
+            if (!QFileInfo(rootDir.absoluteFilePath(op.dstPath)).isDir()) {
+                ok = ok && rootDir.mkdir(op.dstPath);
+                if (!ok)
+                    qDebug() << "Error creating dir " << op.dstPath;
+            }
             ++processedOps;
             break;
 
         case OpDesc::Copy:
             ok = ok && QFile::copy(op.srcPath, op.dstPath);
+            if (!ok)
+                qDebug() << "Error copying " << op.srcPath << " to " << op.dstPath;
             ++processedOps;
             break;
 
@@ -375,7 +389,7 @@ void FilesManager::removeFile(QString path)
     ops.append(OpDesc{ OpDesc::Remove, path, QString() });
 }
 
-void FilesManager::copyFiles(QDir srcDir, QDir dstDir)
+void FilesManager::processFiles(QDir srcDir, QDir dstDir, OpDesc::OpType opType)
 {
     auto entries = srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
     foreach (const auto& entry, entries) {
@@ -384,9 +398,14 @@ void FilesManager::copyFiles(QDir srcDir, QDir dstDir)
         auto dstFilePath = dstDir.absoluteFilePath(name);
         if (entry.isDir()) {
             ops.append(OpDesc{ OpDesc::MakeDir, QString(), dstFilePath });
-            copyFiles(QDir(srcFilePath), QDir(dstFilePath));
+            processFiles(QDir(srcFilePath), QDir(dstFilePath), opType);
         } else {
-            ops.append(OpDesc{ OpDesc::Copy, srcFilePath, dstFilePath });
+            if (opType == OpDesc::Move) {
+                removeFile(dstFilePath);
+                ops.append(OpDesc{ OpDesc::Rename, srcFilePath, dstFilePath });
+            } else {
+                ops.append(OpDesc{ opType, srcFilePath, dstFilePath });
+            }
         }
     }
 }

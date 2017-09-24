@@ -2,7 +2,6 @@
 #include "files.h"
 #include <QTemporaryFile>
 #include <JlCompress.h>
-#include <QSet>
 
 Archive::Archive(QString archiveName)
     : archiveName(archiveName)
@@ -21,24 +20,35 @@ bool Archive::open()
     if (!zipFile.open(QuaZip::mdUnzip))
         return false;
     rootDir = new QuaZipDir(&zipFile);
-    auto entries = rootDir->entryInfoList(QDir::Dirs);
-    if (entries.size() == 1) {
-        auto srcDirName = entries.first().name;
-        if (srcDirName != Files::SOURCES_DIR_NAME)
-            return false;
-        compiledVersion = false;
-    } else {
-        QSet<QString> subDirNames;
-        for (const auto& entry : entries)
-            subDirNames.insert(entry.name);
-        if (subDirNames.size() != 2
-            || !subDirNames.contains(Files::SOURCES_DIR_NAME)
-            || !subDirNames.contains(Files::BIN_DIR_NAME))
-            return false;
-        compiledVersion = true;
-    }
     myVersion = exctractVersion();
-    return !myVersion.empty();
+    if (myVersion.empty())
+        return false;
+
+    compiledVersion = false;
+    auto dir = *rootDir;
+    if (dir.cd(Files::CONTRIB_DIR_NAME)) {
+        auto binDir = dir;
+        if (binDir.cd(Files::BIN_DIR_NAME)) {
+            auto debugDir = binDir;
+            bool hasDebugFiles = false;
+            if (debugDir.cd(Files::DEBUG_DIR_NAME)) {
+                hasDebugFiles = debugDir.exists(Files::GAMEBASE_PROJECT_NAME + ".dll")
+                        && debugDir.exists(Files::GAMEBASE_PROJECT_NAME + ".lib")
+                        && debugDir.exists(Files::GAMEBASE_PROJECT_NAME + ".pdb");
+            }
+
+            auto releaseDir = binDir;
+            bool hasReleaseFiles = false;
+            if (releaseDir.cd(Files::RELEASE_DIR_NAME)) {
+                hasReleaseFiles = releaseDir.exists(Files::GAMEBASE_PROJECT_NAME + ".dll")
+                        && releaseDir.exists(Files::GAMEBASE_PROJECT_NAME + ".lib")
+                        && releaseDir.exists(Files::EDITOR_PROJECT_NAME + ".exe");
+
+            }
+            compiledVersion = hasDebugFiles + hasReleaseFiles;
+        }
+    }
+    return true;
 }
 
 const QuaZipDir& Archive::root() const
@@ -59,10 +69,8 @@ const Version &Archive::version() const
 QString Archive::findVersionFile()
 {
     auto dir = root();
-    if (!dir.cd(Files::SOURCES_DIR_NAME))
-        return QString();
     if (dir.exists(Files::VERSION_FILE_NAME))
-        return dir.filePath(Files::VERSION_FILE_NAME);
+        return Files::VERSION_FILE_NAME;
     return QString();
 }
 

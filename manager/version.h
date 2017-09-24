@@ -18,6 +18,8 @@ public:
     static Version fromFile(QString path);
     static Version selfVersion();
 
+    static const Version CURRENT_MAJOR;
+
     QList<int> version;
 };
 

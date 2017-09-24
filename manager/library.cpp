@@ -37,7 +37,17 @@ Library checkDeployed(const LibrarySource& source, QDir dir)
         return Library::makeAbsent(source);
     if (!dir.cd(Files::RELEASE_DIR_NAME))
         return Library::makeAbsent(source);
-    if (!Files::exists(dir, Files::EDITOR_PROJECT_NAME + ".exe"))
+    if (!Files::exists(dir, Files::EDITOR_PROJECT_NAME + ".exe")
+        || !Files::exists(dir, Files::GAMEBASE_PROJECT_NAME + ".lib")
+        || !Files::exists(dir, Files::GAMEBASE_PROJECT_NAME + ".dll"))
+        return Library::makeAbsent(source);
+
+    dir.cdUp();
+    if (!dir.cd(Files::DEBUG_DIR_NAME))
+        return Library::makeAbsent(source);
+    if (!Files::exists(dir, Files::GAMEBASE_PROJECT_NAME + ".pdb")
+        || !Files::exists(dir, Files::GAMEBASE_PROJECT_NAME + ".lib")
+        || !Files::exists(dir, Files::GAMEBASE_PROJECT_NAME + ".dll"))
         return Library::makeAbsent(source);
 
     dir.cdUp();
@@ -59,7 +69,7 @@ Library checkArchives(const LibrarySource& source, QDir dir)
     if (!archive.open())
         return Library::makeAbsent(source);
     Library::State state = archive.isCompiledVersion()
-            ?  Library::SourceCode : Library::BinaryArchive;
+            ?  Library::BinaryArchive : Library::SourceCode;
     Version version = archive.version();
     if (version.empty())
         return Library::makeAbsent(source);

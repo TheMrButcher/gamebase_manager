@@ -22,8 +22,10 @@ public:
     void remove(QString path);
     void unarchive(QString archivePath, QString dstPath);
     void rename(QString srcPath, QString dstPath);
+    void move(QString srcPath, QString dstPath);
     void copyTree(QString srcPath, QString dstPath);
     void copyFiles(QString srcPath, QString dstPath);
+    void moveFiles(QString srcPath, QString dstPath);
     void copy(QString srcPath, QString dstPath);
     void archive(QString srcRootPath, QStringList files, QString dstPath);
     bool run();
@@ -39,11 +41,6 @@ private slots:
     void onProgressUpdate();
 
 private:
-    void removeDir(QString path);
-    void removeFile(QString path);
-    void copyFiles(QDir srcDir, QDir dstDir);
-    void archive(QDir srcRootDir, QString path);
-
     struct OpDesc {
         enum OpType {
             Remove,
@@ -53,6 +50,7 @@ private:
             FinishUnarchive,
             Rename,
             Copy,
+            Move,
             MakeDir,
             CreateArchive,
             AddToArchive,
@@ -64,6 +62,11 @@ private:
         QString srcPath;
         QString dstPath;
     };
+
+    void removeDir(QString path);
+    void removeFile(QString path);
+    void processFiles(QDir srcDir, QDir dstDir, OpDesc::OpType opType);
+    void archive(QDir srcRootDir, QString path);
 
     QDir rootDir;
     QList<OpDesc> ops;

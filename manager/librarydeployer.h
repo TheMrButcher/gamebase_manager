@@ -22,8 +22,11 @@ signals:
     void finishedDeploy(Library library);
 
 private:
-    bool unarchive(QDir srcDir);
-    bool compileSources(QDir dir);
+    bool unarchive(QDir srcDir, QDir& rootDir);
+    bool prepare(QDir rootDir);
+    bool unarchiveContrib(QDir srcDir, QDir rootDir);
+    bool compileSources(QDir rootDir);
+    bool makeLink(QDir rootDir);
     void emitFinish();
 
     Library library;

@@ -19,18 +19,30 @@ const QString SET_CONFIG_PREFIX = "app.setConfig(\"";
 const QString SET_CONFIG_SUFFIX = "\");";
 const QString DEFINE_APP_LINE = "MyApp app;";
 
-bool getDeployedConfigsDir(QDir& dir)
+QList<QDir> getDeployedConfigDirs()
 {
+    QList<QDir> result;
     auto workingDir = Settings::instance().workingDir();
     if (workingDir.check() != SourceStatus::OK)
-        return false;
+        return result;
 
-    dir = QDir(workingDir.path);
+    QDir dir = QDir(workingDir.path);
     if (!dir.cd(Files::DEPLOYED_ROOT_DIR_NAME)
         || !dir.cd(Files::CONTRIB_DIR_NAME)
         || !dir.cd(Files::BIN_DIR_NAME))
-        return false;
-    return true;
+        return result;
+
+    QDir debugDir = dir;
+    if (!debugDir.cd(Files::DEBUG_DIR_NAME))
+        return result;
+
+    QDir releaseDir = dir;
+    if (!releaseDir.cd(Files::RELEASE_DIR_NAME))
+        return result;
+
+    result.append(debugDir);
+    result.append(releaseDir);
+    return result;
 }
 
 bool updateMainCppImpl(QDir dir, QString configName, int fixIteration)
@@ -154,14 +166,20 @@ bool App::copyConfig()
         return false;
     if (!srcDir.exists(Files::APP_CONFIG_NAME))
         return false;
-    QDir dstDir;
-    if (!getDeployedConfigsDir(dstDir))
+
+    auto dirs = getDeployedConfigDirs();
+    if (dirs.empty())
         return false;
 
     AppConfig config;
     if (!config.read(srcDir, srcDir.absoluteFilePath(Files::APP_CONFIG_NAME)))
         return false;
-    return config.write(dstDir, dstDir.absoluteFilePath(containerName + Files::APP_CONFIG_NAME));
+    for (auto dstDir : dirs) {
+        auto dstPath = dstDir.absoluteFilePath(containerName + Files::APP_CONFIG_NAME);
+        if (!config.write(dstDir, dstPath))
+            return false;
+    }
+    return true;
 }
 
 AppConfig App::config()
@@ -186,10 +204,11 @@ bool App::setConfig(const AppConfig& config)
 
 void App::removeConfig()
 {
-    QDir dstDir;
-    if (!getDeployedConfigsDir(dstDir))
+    auto dirs = getDeployedConfigDirs();
+    if (dirs.empty())
         return;
-    dstDir.remove(containerName + Files::APP_CONFIG_NAME);
+    for (auto dstDir : dirs)
+        dstDir.remove(containerName + Files::APP_CONFIG_NAME);
 }
 
 bool App::updateMainCpp()
@@ -298,11 +317,19 @@ App App::fromFileSystem(const AppSource& source, QString containerName)
             hasAllFiles = false;
 
         {
-            QDir workingDir;
-            if (!version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME))
-                || !getDeployedConfigsDir(workingDir)
-                || !workingDir.exists(containerName + Files::APP_CONFIG_NAME))
+            if (version.read(dir.absoluteFilePath(Files::VERSION_FILE_NAME))) {
+                auto dirs = getDeployedConfigDirs();
+                if (dirs.empty()) {
+                    hasAllFiles = false;
+                } else {
+                    for (auto dstDir : dirs) {
+                        if (!dstDir.exists(containerName + Files::APP_CONFIG_NAME))
+                            hasAllFiles = false;
+                    }
+                }
+            } else {
                 hasAllFiles = false;
+            }
         }
         if (state == NotConfigured && hasAllFiles && source.type != AppSource::Directory)
             state = Full;
@@ -317,7 +344,7 @@ App App::fromFileSystem(const AppSource& source, QString containerName)
             if (slnFiles.size() == 1) {
                 QString name = slnFiles.first().name;
                 name = name.mid(0, name.size() - 4);
-                Version version = archive.exctractVersion();
+                Version version = archive.version();
                 return App{ source, Archived, name, version, containerName };
             }
         }
