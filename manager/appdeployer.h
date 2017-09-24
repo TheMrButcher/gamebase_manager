@@ -22,7 +22,7 @@ signals:
 
 private:
     bool tryDeploy();
-    void formCopyTask();
+    bool formCopyTask();
 
     App app;
     QString dstPath;

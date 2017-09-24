@@ -214,11 +214,13 @@ bool LibraryDeployer::compileSources(QDir rootDir)
     auto dir = rootDir;
     dir.cd(Files::SOURCES_DIR_NAME);
     dir.cd(Files::GAMEBASE_PROJECT_NAME);
-    if (!compiler->compile(dir))
+    if (!compiler->compile(dir, Compiler::BuildType::Debug))
+        return false;
+    if (!compiler->compile(dir, Compiler::BuildType::Release))
         return false;
     dir.cdUp();
     dir.cd(Files::EDITOR_PROJECT_NAME);
-    if (!compiler->compile(dir))
+    if (!compiler->compile(dir, Compiler::BuildType::Release))
         return false;
     return true;
 }

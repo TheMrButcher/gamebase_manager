@@ -17,17 +17,18 @@ Compiler::Compiler(QObject* parent)
     connect(ProgressManager::instance(), SIGNAL(canceled()), this, SLOT(cancel()));
 }
 
-bool Compiler::compile(QDir projectDir)
+bool Compiler::compile(QDir projectDir, BuildType buildType)
 {
-    return compile(projectDir, projectDir.dirName());
+    return compile(projectDir, projectDir.dirName(), buildType);
 }
 
-bool Compiler::compile(QDir projectDir, QString projectName)
+bool Compiler::compile(QDir projectDir, QString projectName, BuildType buildType)
 {
     ProgressManager::invokeShow("Построение...", "");
     ProgressManager::invokeSetLabel("Идет построение...");
     Files::copyTextFile(":/scripts/compile.bat", projectDir.absoluteFilePath(COMPILATION_BATCH_NAME));
-    auto result = compileImpl(projectDir, projectName);
+    auto result = compileImpl(projectDir, projectName,
+                              buildType == BuildType::Debug ? "Debug" : "Release");
     projectDir.remove(COMPILATION_BATCH_NAME);
     if (static_cast<int>(cancelFlag) == 0) {
         ProgressManager::invokeStart(1);
@@ -43,7 +44,7 @@ void Compiler::cancel()
     cancelFlag.testAndSetOrdered(0, 1);
 }
 
-bool Compiler::compileImpl(QDir projectDir, QString projectName)
+bool Compiler::compileImpl(QDir projectDir, QString projectName, QString buildType)
 {
     QProcess cmdProcess;
     cmdProcess.setWorkingDirectory(projectDir.absolutePath());
@@ -55,6 +56,7 @@ bool Compiler::compileImpl(QDir projectDir, QString projectName)
         return false;
     env.insert("VISUAL_CPP_VARIABLES_PATH", vcVarsPath);
     env.insert("SOLUTION_TO_BUILD_NAME", projectName + ".sln");
+    env.insert("BUILD_TYPE", buildType);
     cmdProcess.setProcessEnvironment(env);
 
     QStringList arguments;

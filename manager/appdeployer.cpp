@@ -30,13 +30,14 @@ void AppDeployer::run()
 
 bool AppDeployer::tryDeploy()
 {
-    formCopyTask();
+    if (!formCopyTask())
+        return false;
     if (!manager->run())
         return false;
 
     QDir srcDir(app.source.path);
     srcDir.cd(app.containerName);
-    if (compiler->compile(srcDir, app.name)) {
+    if (compiler->compile(srcDir, app.name, Compiler::BuildType::Release)) {
         if (srcDir.cd("Release")) {
             QString exeName = app.name + ".exe";
             QDir dstDir(dstPath);
@@ -48,26 +49,26 @@ bool AppDeployer::tryDeploy()
     return false;
 }
 
-void AppDeployer::formCopyTask()
+bool AppDeployer::formCopyTask()
 {
     ProgressManager::invokeShow("Копирование файлов...", "Скопировано файлов");
     QDir srcDir(app.source.path);
     if (!srcDir.cd(app.containerName))
-        return;
+        return false;
     QDir dstDir;
     if (!dstDir.exists(dstPath))
         dstDir.mkpath(dstPath);
     if (!dstDir.cd(dstPath))
-        return;
+        return false;
 
     auto config = app.config();
     auto newConfig = AppConfig::makeDeployedAppConfig(dstDir, config);
     if (!newConfig.write(dstDir, dstDir.absoluteFilePath(Files::APP_CONFIG_NAME)))
-        return;
+        return false;
     if (!app.version.write(dstDir.absoluteFilePath(Files::VERSION_FILE_NAME)))
-        return;
+        return false;
     if (!app.updateMainCpp(Files::APP_CONFIG_NAME))
-        return;
+        return false;
 
     dstDir.mkpath(newConfig.imagesPath);
     manager->copyFiles(config.imagesPath, newConfig.imagesPath);
@@ -84,9 +85,11 @@ void AppDeployer::formCopyTask()
     QDir libsDir(Settings::instance().workingDir().path);
     if (!libsDir.cd(Files::DEPLOYED_ROOT_DIR_NAME)
         || !libsDir.cd(Files::CONTRIB_DIR_NAME)
-        || !libsDir.cd(Files::BIN_DIR_NAME))
-        return;
+        || !libsDir.cd(Files::BIN_DIR_NAME)
+        || !libsDir.cd(Files::RELEASE_DIR_NAME))
+        return false;
     auto libs = libsDir.entryList(QStringList("*.dll"), QDir::Files);
     foreach (auto file, libs)
         manager->copy(libsDir.absoluteFilePath(file), file);
+    return true;
 }
