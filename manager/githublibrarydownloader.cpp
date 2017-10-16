@@ -5,6 +5,14 @@
 
 namespace {
 const int MAX_RELEASES_NUM = 3;
+
+GithubDownloader::Asset findAsset(const QList<GithubDownloader::Asset>& assets, QString name)
+{
+    for (const auto& asset : assets)
+        if (asset.name == name)
+            return asset;
+    return GithubDownloader::Asset();
+}
 }
 
 GithubLibraryDownloader::GithubLibraryDownloader(const LibrarySource& source, QWidget* parent)
@@ -29,7 +37,12 @@ void GithubLibraryDownloader::update()
 
 void GithubLibraryDownloader::download(const Library& library)
 {
-    /*Library resultLibrary = library.afterAction(Library::Download);
+    Library resultLibrary = library.afterAction(Library::Download);
+    if (resultLibrary.state != Library::BinaryArchive) {
+        emit finishedDownload(resultLibrary);
+        return;
+    }
+
     if (!downloader->hasConnection()) {
         emit finishedDownload(resultLibrary);
         return;
@@ -49,11 +62,14 @@ void GithubLibraryDownloader::download(const Library& library)
 
     auto release = releases.front();
     bool isFull = true;
-    isFull = isFull && !release.sourcesUrl.isEmpty();
+    //isFull = isFull && !release.sourcesUrl.isEmpty();
     if (resultLibrary.state == Library::BinaryArchive) {
-        isFull = isFull && !release.assets.isEmpty();
-        isFull = isFull && release.assets.front().name == Files::BINARY_ARCHIVE_NAME
-                && !release.assets.front().url.isEmpty();
+        QStringList assetNames;
+        for (const auto& asset : release.assets)
+            assetNames.append(asset.name);
+        isFull = isFull
+                && assetNames.contains(Files::GAMEBASE_ARCHIVE_NAME)
+                && assetNames.contains(Files::CONTRIB_ARCHIVE_NAME);
     }
     if (!isFull) {
         emit finishedDownload(resultLibrary);
@@ -74,14 +90,20 @@ void GithubLibraryDownloader::download(const Library& library)
     libraryToDownload = resultLibrary;
     QList<GithubDownloader::Request> requests;
     if (resultLibrary.state == Library::BinaryArchive) {
-        auto binFilePath = dir.absoluteFilePath(Files::BINARY_ARCHIVE_NAME);
+        auto gamebaseFilePath = dir.absoluteFilePath(Files::GAMEBASE_ARCHIVE_NAME);
         requests.append(GithubDownloader::Request{
-            release.assets.front().url, binFilePath, "application/octet-stream" });
+            findAsset(release.assets, Files::GAMEBASE_ARCHIVE_NAME).url,
+            gamebaseFilePath, "application/octet-stream" });
+
+        auto contribFilePath = dir.absoluteFilePath(Files::CONTRIB_ARCHIVE_NAME);
+        requests.append(GithubDownloader::Request{
+            findAsset(release.assets, Files::CONTRIB_ARCHIVE_NAME).url,
+            contribFilePath, "application/octet-stream" });
     }
-    auto sourcesFilePath = dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
+    /*auto sourcesFilePath = dir.absoluteFilePath(Files::SOURCES_ARCHIVE_NAME);
     requests.append(GithubDownloader::Request{
-        release.sourcesUrl, sourcesFilePath, "application/vnd.github.v3+json" });
-    downloader->download(requests, TaskMode::ShowDialog);*/
+        release.sourcesUrl, sourcesFilePath, "application/vnd.github.v3+json" });*/
+    downloader->download(requests, TaskMode::ShowDialog);
 }
 
 void GithubLibraryDownloader::onVersionsUpdated(QStringList versions)
@@ -97,13 +119,16 @@ void GithubLibraryDownloader::onVersionsUpdated(QStringList versions)
 
     source.status = SourceStatus::OK;
     cachedLibraries.clear();
-    for (int i = 0; i < MAX_RELEASES_NUM && i < sortedVersions.size(); ++i) {
-        auto version = sortedVersions[sortedVersions.size() - 1 - i];
-        if (version < Version::CURRENT_MAJOR)
-            break;
+
+    std::reverse(sortedVersions.begin(), sortedVersions.end());
+    auto itLast = std::find_if(sortedVersions.begin(), sortedVersions.end(),
+                               [](const Version& v) { return v < Version::CURRENT_MAJOR; });
+    sortedVersions.erase(itLast, sortedVersions.end());
+    if (sortedVersions.size() > MAX_RELEASES_NUM)
+        sortedVersions.erase(sortedVersions.begin() + MAX_RELEASES_NUM, sortedVersions.end());
+
+    for (const auto& version : sortedVersions)
         cachedLibraries.append(Library{ source, Library::BinaryArchive, version, "" });
-        cachedLibraries.append(Library{ source, Library::SourceCode, version, "" });
-    }
     emit finishedUpdate(source, cachedLibraries);
 }
 
