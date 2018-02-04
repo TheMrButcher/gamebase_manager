@@ -9,6 +9,8 @@ public:
 
     QString workingPath;
     QString designedObjectImagesPath;
+    QString soundsPath;
+    QString musicPath;
     int width;
     int height;
     bool isWindow;

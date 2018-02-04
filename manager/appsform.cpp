@@ -261,9 +261,13 @@ void AppsForm::on_createButton_clicked()
     if (newAppDialog->needCreateResources()) {
         dstDir.mkdir("images");
         dstDir.mkdir("design");
+        dstDir.mkdir("sounds");
+        dstDir.mkdir("music");
         AppConfig config = app.config();
         config.imagesPath = dstDir.absoluteFilePath("images");
         config.designPath = dstDir.absoluteFilePath("design");
+        config.soundsPath = dstDir.absoluteFilePath("sounds");
+        config.musicPath = dstDir.absoluteFilePath("music");
         app.setConfig(config);
     }
 
@@ -465,6 +469,8 @@ void AppsForm::on_openEditorButton_clicked()
     auto appConfig = app.config();
     editorConfig.designedObjectImagesPath = appConfig.imagesPath;
     editorConfig.workingPath = appConfig.designPath;
+    editorConfig.soundsPath = appConfig.soundsPath;
+    editorConfig.musicPath = appConfig.musicPath;
     if (!editorConfig.write()) {
         QMessageBox::warning(this, "Ошибка при записи конфигурации",
                              "Невозможно обновить конфигурацию редактора дизайна. "

@@ -8,6 +8,8 @@ bool EditorConfig::readImpl(QDir rootDir)
     workingPath = absPathOr(rootDir, rootObj["workingPath"].toString(), workingPath);
     designedObjectImagesPath = absPathOr(
         rootDir, rootObj["designedObjectImagesPath"].toString(), designedObjectImagesPath);
+    soundsPath = absPathOr(rootDir, rootObj["soundsPath"].toString(), soundsPath);
+    musicPath = absPathOr(rootDir, rootObj["musicPath"].toString(), musicPath);
     width = rootObj["width"].toInt(width);
     height = rootObj["height"].toInt(height);
     QString mode = rootObj["mode"].toString();
@@ -18,8 +20,13 @@ bool EditorConfig::readImpl(QDir rootDir)
 
 bool EditorConfig::writeImpl(QDir rootDir, QJsonObject& newRootObj) const
 {
+    newRootObj["version"] = "VER3";
     newRootObj["workingPath"] = rootDir.relativeFilePath(workingPath);
     newRootObj["designedObjectImagesPath"] = rootDir.relativeFilePath(designedObjectImagesPath);
+    if (!soundsPath.isEmpty())
+        newRootObj["soundsPath"] = rootDir.relativeFilePath(soundsPath);
+    if (!musicPath.isEmpty())
+        newRootObj["musicPath"] = rootDir.relativeFilePath(musicPath);
     newRootObj["width"] = width;
     newRootObj["height"] = height;
     newRootObj["mode"] = isWindow ? QString("window") : QString("fullscreen");

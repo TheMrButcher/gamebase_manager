@@ -10,6 +10,8 @@ bool AppConfig::readImpl(QDir rootDir)
     designPath = absPathOr(rootDir, rootObj["designPath"].toString(), designPath);
     shadersPath = absPathOr(rootDir, rootObj["shadersPath"].toString(), shadersPath);
     fontsPath = absPathOr(rootDir, rootObj["fontsPath"].toString(), fontsPath);
+    soundsPath = absPathOr(rootDir, rootObj["soundsPath"].toString(), soundsPath);
+    musicPath = absPathOr(rootDir, rootObj["musicPath"].toString(), musicPath);
     width = rootObj["width"].toInt(width);
     height = rootObj["height"].toInt(height);
     QString mode = rootObj["mode"].toString();
@@ -20,10 +22,15 @@ bool AppConfig::readImpl(QDir rootDir)
 
 bool AppConfig::writeImpl(QDir rootDir, QJsonObject& newRootObj) const
 {
+    newRootObj["version"] = "VER3";
     newRootObj["imagesPath"] = rootDir.relativeFilePath(imagesPath);
     newRootObj["designPath"] = rootDir.relativeFilePath(designPath);
     newRootObj["shadersPath"] = rootDir.relativeFilePath(shadersPath);
     newRootObj["fontsPath"] = rootDir.relativeFilePath(fontsPath);
+    if (!soundsPath.isEmpty())
+        newRootObj["soundsPath"] = rootDir.relativeFilePath(soundsPath);
+    if (!musicPath.isEmpty())
+        newRootObj["musicPath"] = rootDir.relativeFilePath(musicPath);
     newRootObj["width"] = width;
     newRootObj["height"] = height;
     newRootObj["mode"] = isWindow ? QString("window") : QString("fullscreen");
@@ -50,6 +57,8 @@ AppConfig AppConfig::defaultConfig()
     config.designPath = dir.absoluteFilePath(Files::DESIGNS_DIR_NAME);
     config.shadersPath = dir.absoluteFilePath("shaders");
     config.fontsPath = dir.absoluteFilePath(Files::FONTS_DIR_NAME);
+    config.soundsPath = "";
+    config.musicPath = "";
     return config;
 }
 
@@ -60,5 +69,9 @@ AppConfig AppConfig::makeDeployedAppConfig(QDir rootDir, const AppConfig& origin
     config.designPath = rootDir.absoluteFilePath("resources/design");
     config.shadersPath = rootDir.absoluteFilePath("resources/shaders");
     config.fontsPath = rootDir.absoluteFilePath("resources/fonts");
+    if (!originConfig.soundsPath.isEmpty())
+        config.soundsPath = rootDir.absoluteFilePath("resources/sounds");
+    if (!originConfig.musicPath.isEmpty())
+        config.musicPath = rootDir.absoluteFilePath("resources/music");
     return config;
 }

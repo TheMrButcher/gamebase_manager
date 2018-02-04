@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>500</height>
+    <height>594</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -20,6 +20,9 @@
    <string>Конфигурация приложения</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
@@ -129,6 +132,82 @@
          <widget class="QToolButton" name="chooseDesignPathButton">
           <property name="toolTip">
            <string>Указать путь к дизайну</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/images/icons/Folder.png</normaloff>:/images/icons/Folder.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
+        <item>
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Путь к звукам:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="soundsPath">
+          <property name="statusTip">
+           <string>Путь, по которому приложение будет искать изображения</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="chooseSoundsPathButton">
+          <property name="toolTip">
+           <string>Указать путь к изображениям</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/images/icons/Folder.png</normaloff>:/images/icons/Folder.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_13">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Путь к музыке:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="musicPath">
+          <property name="statusTip">
+           <string>Путь, по которому приложение будет искать изображения</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="chooseMusicPathButton">
+          <property name="toolTip">
+           <string>Указать путь к изображениям</string>
           </property>
           <property name="text">
            <string>...</string>

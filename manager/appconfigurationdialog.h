@@ -36,6 +36,10 @@ private slots:
 
     void on_chooseDesignPathButton_clicked();
 
+    void on_chooseSoundsPathButton_clicked();
+
+    void on_chooseMusicPathButton_clicked();
+
 private:
     void set(App app, const AppConfig& config);
     void updateStatuses(App app);

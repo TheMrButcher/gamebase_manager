@@ -82,6 +82,16 @@ bool AppDeployer::formCopyTask()
     dstDir.mkpath(newConfig.fontsPath);
     manager->copyFiles(config.fontsPath, newConfig.fontsPath);
 
+    if (!newConfig.soundsPath.isEmpty()) {
+        dstDir.mkpath(newConfig.soundsPath);
+        manager->copyFiles(config.soundsPath, newConfig.soundsPath);
+    }
+
+    if (!newConfig.musicPath.isEmpty()) {
+        dstDir.mkpath(newConfig.musicPath);
+        manager->copyFiles(config.musicPath, newConfig.musicPath);
+    }
+
     QDir libsDir(Settings::instance().workingDir().path);
     if (!libsDir.cd(Files::DEPLOYED_ROOT_DIR_NAME)
         || !libsDir.cd(Files::CONTRIB_DIR_NAME)

@@ -9,6 +9,8 @@ public:
     QString designPath;
     QString shadersPath;
     QString fontsPath;
+    QString soundsPath;
+    QString musicPath;
     int width;
     int height;
     bool isWindow;
