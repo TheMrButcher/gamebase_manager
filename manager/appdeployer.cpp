@@ -81,6 +81,8 @@ bool AppDeployer::formCopyTask()
 
     dstDir.mkpath(newConfig.fontsPath);
     manager->copyFiles(config.fontsPath, newConfig.fontsPath);
+    if (!config.additionalFontsPath.isEmpty())
+        manager->copyFiles(config.additionalFontsPath, newConfig.fontsPath);
 
     if (!newConfig.soundsPath.isEmpty()) {
         dstDir.mkpath(newConfig.soundsPath);

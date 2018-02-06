@@ -3,13 +3,24 @@
 #include "settings.h"
 #include "librarysource.h"
 #include <QJsonObject>
+#include <QJsonArray>
 
 bool AppConfig::readImpl(QDir rootDir)
 {
     imagesPath = absPathOr(rootDir, rootObj["imagesPath"].toString(), imagesPath);
     designPath = absPathOr(rootDir, rootObj["designPath"].toString(), designPath);
     shadersPath = absPathOr(rootDir, rootObj["shadersPath"].toString(), shadersPath);
-    fontsPath = absPathOr(rootDir, rootObj["fontsPath"].toString(), fontsPath);
+    if (rootObj["fontsPath"].isArray()) {
+        auto fontsPathArray = rootObj["fontsPath"].toArray();
+        if (fontsPathArray.size() > 0)
+            fontsPath = absPathOr(rootDir, fontsPathArray[0].toString(), fontsPath);
+        if (fontsPathArray.size() > 1)
+            additionalFontsPath = absPathOr(
+                    rootDir, fontsPathArray[1].toString(), additionalFontsPath);
+    } else {
+        fontsPath = absPathOr(rootDir, rootObj["fontsPath"].toString(), fontsPath);
+        additionalFontsPath = "";
+    }
     soundsPath = absPathOr(rootDir, rootObj["soundsPath"].toString(), soundsPath);
     musicPath = absPathOr(rootDir, rootObj["musicPath"].toString(), musicPath);
     width = rootObj["width"].toInt(width);
@@ -26,7 +37,14 @@ bool AppConfig::writeImpl(QDir rootDir, QJsonObject& newRootObj) const
     newRootObj["imagesPath"] = rootDir.relativeFilePath(imagesPath);
     newRootObj["designPath"] = rootDir.relativeFilePath(designPath);
     newRootObj["shadersPath"] = rootDir.relativeFilePath(shadersPath);
-    newRootObj["fontsPath"] = rootDir.relativeFilePath(fontsPath);
+    if (additionalFontsPath.isEmpty()) {
+        newRootObj["fontsPath"] = rootDir.relativeFilePath(fontsPath);
+    } else {
+        QJsonArray fontsPathArray;
+        fontsPathArray.append(rootDir.relativeFilePath(fontsPath));
+        fontsPathArray.append(rootDir.relativeFilePath(additionalFontsPath));
+        newRootObj["fontsPath"] = fontsPathArray;
+    }
     if (!soundsPath.isEmpty())
         newRootObj["soundsPath"] = rootDir.relativeFilePath(soundsPath);
     if (!musicPath.isEmpty())
@@ -59,6 +77,7 @@ AppConfig AppConfig::defaultConfig()
     config.fontsPath = dir.absoluteFilePath(Files::FONTS_DIR_NAME);
     config.soundsPath = "";
     config.musicPath = "";
+    config.additionalFontsPath = "";
     return config;
 }
 
@@ -73,5 +92,6 @@ AppConfig AppConfig::makeDeployedAppConfig(QDir rootDir, const AppConfig& origin
         config.soundsPath = rootDir.absoluteFilePath("resources/sounds");
     if (!originConfig.musicPath.isEmpty())
         config.musicPath = rootDir.absoluteFilePath("resources/music");
+    config.additionalFontsPath = "";
     return config;
 }

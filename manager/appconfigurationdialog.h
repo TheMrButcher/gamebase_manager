@@ -40,6 +40,8 @@ private slots:
 
     void on_chooseMusicPathButton_clicked();
 
+    void on_chooseAdditionalFontsPathButton_clicked();
+
 private:
     void set(App app, const AppConfig& config);
     void updateStatuses(App app);

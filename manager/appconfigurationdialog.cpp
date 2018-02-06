@@ -75,6 +75,7 @@ AppConfig AppConfigurationDialog::resultConfig() const
     config.designPath = ui->designPath->text();
     config.soundsPath = ui->soundsPath->text();
     config.musicPath = ui->musicPath->text();
+    config.additionalFontsPath = ui->additionalFontsPath->text();
     config.isWindow = ui->windowModeCheckBox->isChecked();
     Dimensions dims = Dimensions::fromString(ui->dimensionsComboBox->currentText());
     config.width = dims.width;
@@ -109,6 +110,7 @@ void AppConfigurationDialog::set(App app, const AppConfig& config)
     ui->designPath->setText(config.designPath);
     ui->soundsPath->setText(config.soundsPath);
     ui->musicPath->setText(config.musicPath);
+    ui->additionalFontsPath->setText(config.additionalFontsPath);
     ui->windowModeCheckBox->setChecked(config.isWindow);
     ui->dimensionsComboBox->setCurrentText(Dimensions::toString(config.width, config.height));
     updateStatuses(app);
@@ -175,4 +177,12 @@ void AppConfigurationDialog::on_chooseMusicPathButton_clicked()
                                                      Settings::instance().workingDir().path);
     if (!path.isEmpty())
         ui->musicPath->setText(path);
+}
+
+void AppConfigurationDialog::on_chooseAdditionalFontsPathButton_clicked()
+{
+    QString path = QFileDialog::getExistingDirectory(this, "Ввод пути к папке с дополнительными шрифтами",
+                                                     Settings::instance().workingDir().path);
+    if (!path.isEmpty())
+        ui->additionalFontsPath->setText(path);
 }

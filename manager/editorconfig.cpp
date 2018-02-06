@@ -1,6 +1,7 @@
 #include "editorconfig.h"
 #include "files.h"
 #include "settings.h"
+#include <QJsonArray>
 
 bool EditorConfig::readImpl(QDir rootDir)
 {
@@ -10,6 +11,17 @@ bool EditorConfig::readImpl(QDir rootDir)
         rootDir, rootObj["designedObjectImagesPath"].toString(), designedObjectImagesPath);
     soundsPath = absPathOr(rootDir, rootObj["soundsPath"].toString(), soundsPath);
     musicPath = absPathOr(rootDir, rootObj["musicPath"].toString(), musicPath);
+    if (rootObj["fontsPath"].isArray()) {
+        auto fontsPathArray = rootObj["fontsPath"].toArray();
+        if (fontsPathArray.size() > 0)
+            fontsPath = absPathOr(rootDir, fontsPathArray[0].toString(), fontsPath);
+        if (fontsPathArray.size() > 1)
+            additionalFontsPath = absPathOr(
+                    rootDir, fontsPathArray[1].toString(), additionalFontsPath);
+    } else {
+        fontsPath = absPathOr(rootDir, rootObj["fontsPath"].toString(), fontsPath);
+        additionalFontsPath = "";
+    }
     width = rootObj["width"].toInt(width);
     height = rootObj["height"].toInt(height);
     QString mode = rootObj["mode"].toString();
@@ -27,6 +39,14 @@ bool EditorConfig::writeImpl(QDir rootDir, QJsonObject& newRootObj) const
         newRootObj["soundsPath"] = rootDir.relativeFilePath(soundsPath);
     if (!musicPath.isEmpty())
         newRootObj["musicPath"] = rootDir.relativeFilePath(musicPath);
+    if (additionalFontsPath.isEmpty()) {
+        newRootObj["fontsPath"] = rootDir.relativeFilePath(fontsPath);
+    } else {
+        QJsonArray fontsPathArray;
+        fontsPathArray.append(rootDir.relativeFilePath(fontsPath));
+        fontsPathArray.append(rootDir.relativeFilePath(additionalFontsPath));
+        newRootObj["fontsPath"] = fontsPathArray;
+    }
     newRootObj["width"] = width;
     newRootObj["height"] = height;
     newRootObj["mode"] = isWindow ? QString("window") : QString("fullscreen");

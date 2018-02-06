@@ -6,15 +6,9 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>594</height>
+    <width>700</width>
+    <height>622</height>
    </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>500</width>
-    <height>500</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>Конфигурация приложения</string>
@@ -70,6 +64,12 @@
    </item>
    <item>
     <widget class="QGroupBox" name="groupBox">
+     <property name="minimumSize">
+      <size>
+       <width>700</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="title">
       <string>Конфигурация</string>
      </property>
@@ -206,6 +206,44 @@
         </item>
         <item>
          <widget class="QToolButton" name="chooseMusicPathButton">
+          <property name="toolTip">
+           <string>Указать путь к изображениям</string>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/images/icons/Folder.png</normaloff>:/images/icons/Folder.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_14">
+        <item>
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Путь к доп. шрифтам:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="additionalFontsPath">
+          <property name="statusTip">
+           <string>Путь, по которому приложение будет искать изображения</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="chooseAdditionalFontsPathButton">
           <property name="toolTip">
            <string>Указать путь к изображениям</string>
           </property>

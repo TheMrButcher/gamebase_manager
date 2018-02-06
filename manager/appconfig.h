@@ -11,6 +11,7 @@ public:
     QString fontsPath;
     QString soundsPath;
     QString musicPath;
+    QString additionalFontsPath;
     int width;
     int height;
     bool isWindow;
